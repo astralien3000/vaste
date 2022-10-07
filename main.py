@@ -41,8 +41,46 @@ class HtmlTag:
     def __init__(self, name):
         self.name = name
     
-    def __call__(*args, **kwargs):
-        pass
+    class VNode:
+        def __init__(self, type, props, children):
+            self.type = type
+            self.props = props
+            self.children = children
+        
+        def __repr__(self):
+            return f"""
+                Vue.h(
+                    "{self.type}",
+                    {{ {", ".join([
+                        f"{k}: {v}"
+                        for k, v in self.props.items()
+                    ])} }},
+                    [ {",".join([
+                        repr(child)
+                        for child in self.children
+                    ]) if self.children is not None else ""} ]
+                )
+            """
+
+    def __call__(self, *args, **kwargs):
+        match args:
+            case []:
+                return self.VNode(
+                    type=self.name,
+                    children=kwargs.get("children", None),
+                    props={
+                        k: v
+                        for k, v in kwargs.items()
+                        if k != "children"
+                    },
+                )
+            case [children]:
+                return self.VNode(
+                    type=self.name,
+                    children=children,
+                    props=kwargs,
+                )
+        raise Exception("ERROR PARAM HtmlTag.__call__")
 
 button = HtmlTag("button")
 svg = HtmlTag("svg")
@@ -66,12 +104,14 @@ class MyComponent:
         #     on_click=self.inc,
         # )
         return svg(
-            children=rect(
-                x=0,
-                y=0,
-                width=100,
-                height=100,
-            ),
+            children=[
+                rect(
+                    x=0,
+                    y=0,
+                    width=100,
+                    height=100,
+                ),
+            ],
         )
 
 
@@ -101,6 +141,8 @@ def test(cls):
     dp = DataProxy()
     cls.data(dp)
     print(dp.vue_data_func)
+    render_res = cls.render(None)
+    print(render_res)
 
 test(MyComponent)
 
@@ -129,7 +171,8 @@ def get_root():
                         }},
                         render() {{
                             //return Vue.h("button", {{ onClick: this.inc }}, ["count : ", this.count]);
-                            return Vue.h("svg", Vue.h("rect", {{ x: 0, y: 0, width: 100, height: 100 }}));
+                            // return Vue.h("svg", {{}}, [Vue.h("rect", {{ x: 0, y: 0, width: 100, height: 100 }}, [])]);
+                            return ({MyComponent.render(None)});
                         }},
                     }}).mount('#app')
                 </script>
