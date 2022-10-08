@@ -103,6 +103,9 @@ class js:
                 self.operator = operator
                 self.right = right
 
+            def unparse(self):
+                return f"{self.left.unparse()}{self.operator}{self.right.unparse()}"
+
         class AssignmentExpression:
             def __init__(self, left, operator: str, right):
                 self.left = left
@@ -254,6 +257,14 @@ class MyJsModule:
     console.log("test")
     alert("LOOL")
 
+
+def vnode_transform(vnode):
+    if hasattr(vnode, "vue_render_ast"):
+        return vnode.vue_render_ast
+    else:
+        return js.ast.Literal(vnode)
+
+
 class HtmlTag:
     def __init__(self, name):
         self.name = name
@@ -276,42 +287,28 @@ class HtmlTag:
                     js.ast.ObjectExpression([
                         js.ast.Property(
                             key=js.ast.Identifier(k),
-                            value=v.vue_render_ast,
+                            value=vnode_transform(v),
                         )
                         for k, v in self.props.items()
                     ]),
                     js.ast.ArrayExpression([
-                        child.vue_render_ast
-                        if hasattr(child, "vue_render_ast")
-                        else js.ast.Literal(child)
+                        vnode_transform(child)
                         for child in self.children
                     ]),
                 ],
             )
 
-    def __call__(self, *args, **kwargs):
-        match args:
-            case []:
-                return self.VNode(
-                    type=self.name,
-                    children=kwargs.get("children", None),
-                    props={
-                        k: v
-                        for k, v in kwargs.items()
-                        if k != "children"
-                    },
-                )
-            case [children]:
-                return self.VNode(
-                    type=self.name,
-                    children=children,
-                    props=kwargs,
-                )
-        raise Exception("ERROR PARAM HtmlTag.__call__")
+    def __call__(self, children = [], **kwargs):
+        return self.VNode(
+            type=self.name,
+            children=children,
+            props=kwargs,
+        )
 
 button = HtmlTag("button")
 svg = HtmlTag("svg")
 rect = HtmlTag("rect")
+div = HtmlTag("div")
 
 
 class MyComponent:
@@ -323,14 +320,37 @@ class MyComponent:
     class methods:
 
         def inc(self):
-            self.count += 1
+            self.count += 10
+        
+        def reset(self):
+            self.count = 0
 
     def render(self):
-        return button(
-            children=[
-                "My ", self.lool," count : ", self.count,
-            ],
-            onClick=self.inc,
+        return (
+            div(
+                children=[
+                    button(
+                        children=[
+                            "My ", self.lool," count : ", self.count,
+                        ],
+                        onClick=self.inc,
+                    ),
+                    button(
+                        children=["RESET"],
+                        onClick=self.reset,
+                    ),
+                    svg(
+                        children=[
+                            rect(
+                                x=0,
+                                y=0,
+                                width=100,
+                                height=self.count + 50,
+                            )
+                        ],
+                    ),
+                ]
+            )
         )
 
 
@@ -365,10 +385,29 @@ class DataProxy:
 
 class RenderProxy:
 
-    class Helper:
+    class MemberBOp:
+        def __init__(self, member, operator, other):
+            self.member = member
+            self.operator = operator
+            self.other = other
+        
+        @property
+        def vue_render_ast(self):
+            return js.ast.BinaryExpression(
+                left=self.member.vue_render_ast,
+                operator=self.operator,
+                right=js.ast.Literal(self.other),
+            )
+
+    class Member:
         def __init__(self, k):
             self.k = k
         
+        def __add__(self, other):
+            return RenderProxy.MemberBOp(
+                self, "+", other
+            )
+
         @property
         def vue_render_ast(self):
             return js.ast.MemberExpression(
@@ -377,7 +416,7 @@ class RenderProxy:
             )
 
     def __getattr__(self, k):
-        return self.Helper(k)
+        return RenderProxy.Member(k)
 
 
 def methods_transform(py_ast):
@@ -414,6 +453,14 @@ def methods_transform(py_ast):
                 js.ast.AssignmentExpression(
                     left=methods_transform(target),
                     operator=methods_transform(op)+"=",
+                    right=methods_transform(value),
+                ),
+            )
+        case ast.Assign([target], value):
+            return js.ast.ExpressionStatement(
+                js.ast.AssignmentExpression(
+                    left=methods_transform(target),
+                    operator="=",
                     right=methods_transform(value),
                 ),
             )
