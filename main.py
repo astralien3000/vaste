@@ -60,6 +60,13 @@ class js:
             def __init__(self, body: list):
                 self.body = body
 
+            def unparse(self):
+                return f"""{{{
+                    "".join([
+                        stmt.unparse() for stmt in self.body
+                    ])
+                }}}"""
+
         class ExpressionStatement:
             def __init__(self, expression):
                 self.expression = expression
@@ -103,6 +110,9 @@ class js:
                 self.operator = operator
                 self.right = right
 
+            def unparse(self):
+                return f"{self.left.unparse()}{self.operator}{self.right.unparse()}"
+
         class TemplateLiteral:
             def __init__(self, expressions: list, quasis: list):
                 self.expressions = expressions
@@ -111,6 +121,62 @@ class js:
         class TemplateElement:
             def __init__(self, value: str):
                 self.value = value
+
+        class ObjectExpression:
+            def __init__(self, properties: list = []):
+                self.properties = properties
+
+            def unparse(self):
+                return f"""{{{
+                    ",".join([
+                        prop.unparse()
+                        for prop in self.properties
+                    ])
+                }}}"""
+
+        class Property:
+            def __init__(self, key: str, value, method: bool = False):
+                self.key = key
+                self.value = value
+                self.method = method
+
+            def unparse(self):
+                if self.method:
+                    return f"{self.key.unparse()}{self.value.unparse()}"
+                else:
+                    return f"{self.key.unparse()}:{self.value.unparse()}"
+
+        class FunctionExpression:
+            def __init__(self, body, params: list = []):
+                self.body = body
+                self.params = params
+
+            def unparse(self):
+                return f"""({
+                    ",".join([
+                        param.unparse()
+                        for param in self.params
+                    ])
+                }){self.body.unparse()}"""
+
+        class ReturnStatement:
+            def __init__(self, argument):
+                self.argument = argument
+
+            def unparse(self):
+                return f"return {self.argument.unparse()};"
+
+        class ArrayExpression:
+            def __init__(self, elements: list = []):
+                self.elements = elements
+
+            def unparse(self):
+                return f"""[{
+                    ",".join([
+                        elem.unparse()
+                        for elem in self.elements
+                    ])
+                }]"""
 
 
 
@@ -146,7 +212,7 @@ def transform(py_ast):
             return js.ast.Literal(
                 value=value
             )
-    raise Exception(f"Unmatched sub ast : {ast.dump(py_ast)}")
+    raise Exception(f"Unmatched ast : {ast.dump(py_ast)}")
 
 
 class JsModule:
@@ -306,33 +372,117 @@ import fastapi
 
 app = fastapi.FastAPI()
 
+
+js_ast = js.ast.Program([
+    js.ast.ExpressionStatement(
+        js.ast.CallExpression(
+            callee=js.ast.MemberExpression(
+                object=js.ast.CallExpression(
+                    callee=js.ast.MemberExpression(
+                        object=js.ast.Identifier("Vue"),
+                        property=js.ast.Identifier("createApp"),
+                    ),
+                    arguments=[
+                        js.ast.ObjectExpression([
+                            js.ast.Property(
+                                key=js.ast.Identifier("data"),
+                                value=js.ast.FunctionExpression(
+                                    js.ast.BlockStatement([
+                                        js.ast.ReturnStatement(
+                                            js.ast.ObjectExpression([
+                                                js.ast.Property(
+                                                    key=js.ast.Identifier("count"),
+                                                    value=js.ast.Literal(0),
+                                                ),
+                                            ]),
+                                        ),
+                                    ]),
+                                ),
+                                method=True,
+                            ),
+                            js.ast.Property(
+                                key=js.ast.Identifier("methods"),
+                                value=js.ast.ObjectExpression([
+                                    js.ast.Property(
+                                        key=js.ast.Identifier("inc"),
+                                        value=js.ast.FunctionExpression(
+                                            js.ast.BlockStatement([
+                                                js.ast.ExpressionStatement(
+                                                    js.ast.AssignmentExpression(
+                                                        left=js.ast.MemberExpression(
+                                                            object=js.ast.Identifier("this"),
+                                                            property=js.ast.Identifier("count"),
+                                                        ),
+                                                        operator="+=",
+                                                        right=js.ast.Literal(1),
+                                                    ),
+                                                ),
+                                            ]),
+                                        ),
+                                        method=True,
+                                    ),
+                                ]),
+                            ),
+                            js.ast.Property(
+                                key=js.ast.Identifier("render"),
+                                value=js.ast.FunctionExpression(
+                                    js.ast.BlockStatement([
+                                        js.ast.ReturnStatement(
+                                            js.ast.CallExpression(
+                                                callee=js.ast.MemberExpression(
+                                                    object=js.ast.Identifier("Vue"),
+                                                    property=js.ast.Identifier("h"),
+                                                ),
+                                                arguments=[
+                                                    js.ast.Literal("button"),
+                                                    js.ast.ObjectExpression([
+                                                        js.ast.Property(
+                                                            key=js.ast.Identifier("onClick"),
+                                                            value=js.ast.MemberExpression(
+                                                                object=js.ast.Identifier("this"),
+                                                                property=js.ast.Identifier("inc"),
+                                                            ),
+                                                        ),
+                                                    ]),
+                                                    js.ast.ArrayExpression([
+                                                        js.ast.Literal("count : "),
+                                                        js.ast.MemberExpression(
+                                                            object=js.ast.Identifier("this"),
+                                                            property=js.ast.Identifier("count"),
+                                                        ),
+                                                    ]),
+                                                ],
+                                            ),
+                                        ),
+                                    ]),
+                                ),
+                                method=True,
+                            ),
+                        ]),
+                    ],
+                ),
+                property=js.ast.Identifier("mount"),
+            ),
+            arguments=[
+                js.ast.Literal("#app"),
+            ],
+        )
+    )
+])
+
+print(js.ast.unparse(js_ast))
+
+
 @app.get("/", response_class=fastapi.responses.HTMLResponse)
 def get_root():
     return f"""
         <html>
             <head>
                 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-                <script>{MyJsModule.code()}</script>
             </head>
             <body>
                 <div id="app"></div>
-                <script>
-                    Vue.createApp({{
-                        data() {{
-                            return {{ count: "0" }}
-                        }},
-                        methods: {{
-                            inc() {{
-                                this.count++;
-                            }}
-                        }},
-                        render() {{
-                            //return Vue.h("button", {{ onClick: this.inc }}, ["count : ", this.count]);
-                            // return Vue.h("svg", {{}}, [Vue.h("rect", {{ x: 0, y: 0, width: 100, height: 100 }}, [])]);
-                            return ({MyComponent.render(None)});
-                        }},
-                    }}).mount('#app')
-                </script>
+                <script>{js.ast.unparse(js_ast)}</script>
             </body>
         </html>
     """
