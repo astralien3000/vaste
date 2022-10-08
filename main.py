@@ -346,10 +346,12 @@ class MyComponent:
                             "My ", self.lool," count : ", self.count,
                         ],
                         onClick=self.inc,
+                        Class="btn btn-primary",
                     ),
                     button(
                         children=["RESET"],
                         onClick=self.reset,
+                        Class="btn btn-danger",
                     ),
                     svg(
                         children=[
