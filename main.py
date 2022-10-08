@@ -309,6 +309,8 @@ button = HtmlTag("button")
 svg = HtmlTag("svg")
 rect = HtmlTag("rect")
 div = HtmlTag("div")
+nav = HtmlTag("nav")
+a = HtmlTag("a")
 
 
 class MyComponent:
@@ -326,7 +328,17 @@ class MyComponent:
             self.count = 0
 
     def render(self):
-        return (
+        return div([
+            nav(
+                Class="navbar navbar-primary bg-primary",
+                children=[
+                    a(
+                        Class="navbar-brand",
+                        href="#",
+                        children="Title?",
+                    ),
+                ],
+            ),
             div(
                 children=[
                     button(
@@ -349,9 +361,9 @@ class MyComponent:
                             )
                         ],
                     ),
-                ]
-            )
-        )
+                ],
+            ),
+        ])
 
 
 class DataProxy:
@@ -531,118 +543,14 @@ import fastapi
 app = fastapi.FastAPI()
 
 
-js_ast = js.ast.Program([
-    js.ast.ExpressionStatement(
-        js.ast.CallExpression(
-            callee=js.ast.MemberExpression(
-                object=js.ast.CallExpression(
-                    callee=js.ast.MemberExpression(
-                        object=js.ast.Identifier("Vue"),
-                        property=js.ast.Identifier("createApp"),
-                    ),
-                    arguments=[
-                        js.ast.ObjectExpression([
-                            js.ast.Property(
-                                key=js.ast.Identifier("data"),
-                                value=js.ast.FunctionExpression(
-                                    js.ast.BlockStatement([
-                                        js.ast.ReturnStatement(
-                                            js.ast.ObjectExpression([
-                                                js.ast.Property(
-                                                    key=js.ast.Identifier("count"),
-                                                    value=js.ast.Literal(0),
-                                                ),
-                                            ]),
-                                        ),
-                                    ]),
-                                ),
-                                method=True,
-                            ),
-                            js.ast.Property(
-                                key=js.ast.Identifier("methods"),
-                                value=js.ast.ObjectExpression([
-                                    js.ast.Property(
-                                        key=js.ast.Identifier("inc"),
-                                        value=js.ast.FunctionExpression(
-                                            js.ast.BlockStatement([
-                                                js.ast.ExpressionStatement(
-                                                    js.ast.AssignmentExpression(
-                                                        left=js.ast.MemberExpression(
-                                                            object=js.ast.Identifier("this"),
-                                                            property=js.ast.Identifier("count"),
-                                                        ),
-                                                        operator="+=",
-                                                        right=js.ast.Literal(1),
-                                                    ),
-                                                ),
-                                            ]),
-                                        ),
-                                        method=True,
-                                    ),
-                                ]),
-                            ),
-                            js.ast.Property(
-                                key=js.ast.Identifier("render"),
-                                value=js.ast.FunctionExpression(
-                                    js.ast.BlockStatement([
-                                        js.ast.ReturnStatement(
-                                            js.ast.CallExpression(
-                                                callee=js.ast.MemberExpression(
-                                                    object=js.ast.Identifier("Vue"),
-                                                    property=js.ast.Identifier("h"),
-                                                ),
-                                                arguments=[
-                                                    js.ast.Literal("button"),
-                                                    js.ast.ObjectExpression([
-                                                        js.ast.Property(
-                                                            key=js.ast.Identifier("onClick"),
-                                                            value=js.ast.MemberExpression(
-                                                                object=js.ast.Identifier("this"),
-                                                                property=js.ast.Identifier("inc"),
-                                                            ),
-                                                        ),
-                                                    ]),
-                                                    js.ast.ArrayExpression([
-                                                        js.ast.Literal("count : "),
-                                                        js.ast.MemberExpression(
-                                                            object=js.ast.Identifier("this"),
-                                                            property=js.ast.Identifier("count"),
-                                                        ),
-                                                    ]),
-                                                ],
-                                            ),
-                                        ),
-                                    ]),
-                                ),
-                                method=True,
-                            ),
-                        ]),
-                    ],
-                ),
-                property=js.ast.Identifier("mount"),
-            ),
-            arguments=[
-                js.ast.Literal("#app"),
-            ],
-        )
-    )
-])
-
-print(js.ast.unparse(js_ast))
-print(
-    js.ast.unparse(
-        vue_prg_ast(
-            js_component_ast(MyComponent)
-        )
-    )
-)
-
 @app.get("/", response_class=fastapi.responses.HTMLResponse)
 def get_root():
     return f"""
         <html>
             <head>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
                 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
             </head>
             <body>
                 <div id="app"></div>
