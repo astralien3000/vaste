@@ -2,7 +2,6 @@ import ast
 import inspect
 
 
-
 class js:
 
     class ast:
@@ -11,7 +10,7 @@ class js:
             return ast.unparse()
 
         class Program:
-            def __init__(self, body: list):
+            def __init__(self, body: list = []):
                 self.body = body
 
             def unparse(self):
@@ -180,28 +179,30 @@ class js:
 
 
 
-def transform(py_ast):
+def transform(py_ast, transform_cb=None):
+    if transform_cb is None:
+        transform_cb = transform
     match py_ast:
         case ast.Module(body):
             return js.ast.Program([
-                transform(stmt_ast)
+                transform_cb(stmt_ast)
                 for stmt_ast in body
             ])
         case ast.Expr(value):
             return js.ast.ExpressionStatement(
-                transform(value)
+                transform_cb(value)
             )
         case ast.Call(func, args):
             return js.ast.CallExpression(
-                callee=transform(func),
+                callee=transform_cb(func),
                 arguments=[
-                    transform(expr_ast)
+                    transform_cb(expr_ast)
                     for expr_ast in args
                 ],
             )
         case ast.Attribute(value, attr):
             return js.ast.MemberExpression(
-                object=transform(value),
+                object=transform_cb(value),
                 property=js.ast.Identifier(attr),
             )
         case ast.Name(id):
@@ -263,20 +264,30 @@ class HtmlTag:
             self.props = props
             self.children = children
         
-        def __repr__(self):
-            return f"""
-                Vue.h(
-                    "{self.type}",
-                    {{ {", ".join([
-                        f"{k}: {v}"
+        @property
+        def vue_render_ast(self):
+            return js.ast.CallExpression(
+                callee=js.ast.MemberExpression(
+                    object=js.ast.Identifier("Vue"),
+                    property=js.ast.Identifier("h"),
+                ),
+                arguments=[
+                    js.ast.Literal(self.type),
+                    js.ast.ObjectExpression([
+                        js.ast.Property(
+                            key=js.ast.Identifier(k),
+                            value=v.vue_render_ast,
+                        )
                         for k, v in self.props.items()
-                    ])} }},
-                    [ {",".join([
-                        repr(child)
+                    ]),
+                    js.ast.ArrayExpression([
+                        child.vue_render_ast
+                        if hasattr(child, "vue_render_ast")
+                        else js.ast.Literal(child)
                         for child in self.children
-                    ]) if self.children is not None else ""} ]
-                )
-            """
+                    ]),
+                ],
+            )
 
     def __call__(self, *args, **kwargs):
         match args:
@@ -306,7 +317,8 @@ rect = HtmlTag("rect")
 class MyComponent:
 
     def data(self):
-        self.count = 1
+        self.count = 0
+        self.lool = "MIEW"
 
     class methods:
 
@@ -314,22 +326,11 @@ class MyComponent:
             self.count += 1
 
     def render(self):
-        # return button(
-        #     children=[
-        #         "count : ",
-        #         self.count,
-        #     ],
-        #     on_click=self.inc,
-        # )
-        return svg(
+        return button(
             children=[
-                rect(
-                    x=0,
-                    y=0,
-                    width=100,
-                    height=100,
-                ),
+                "My ", self.lool," count : ", self.count,
             ],
+            onClick=self.inc,
         )
 
 
@@ -342,31 +343,141 @@ class DataProxy:
         self.data[k] = v
     
     @property
-    def vue_data_func(self):
-        return f"""
-            data() {{
-                return {{
-                    {",".join([
-                        f"{k}: {v}"
-                        for k, v in self.data.items()
-                    ])}
-                }};
-            }}
-        """
+    def vue_data_ast(self):
+        return js.ast.Property(
+            key=js.ast.Identifier("data"),
+            value=js.ast.FunctionExpression(
+                js.ast.BlockStatement([
+                    js.ast.ReturnStatement(
+                        js.ast.ObjectExpression([
+                            js.ast.Property(
+                                key=js.ast.Identifier(k),
+                                value=js.ast.Literal(v),
+                            )
+                            for k, v in self.data.items()
+                        ]),
+                    ),
+                ]),
+            ),
+            method=True,
+        )
 
 
-def test(cls):
+class RenderProxy:
+
+    class Helper:
+        def __init__(self, k):
+            self.k = k
+        
+        @property
+        def vue_render_ast(self):
+            return js.ast.MemberExpression(
+                object=js.ast.Identifier("this"),
+                property=js.ast.Identifier(self.k),
+            )
+
+    def __getattr__(self, k):
+        return self.Helper(k)
+
+
+def methods_transform(py_ast):
+    match py_ast:
+        case ast.Module([module_cls]):
+            return methods_transform(module_cls)
+        case ast.ClassDef("module", [], [], [methods_cls], []):
+            return methods_transform(methods_cls)
+        case ast.ClassDef("methods", [], [], body, []):
+            return js.ast.Property(
+                key=js.ast.Identifier("methods"),
+                value=js.ast.ObjectExpression([
+                    methods_transform(stmt)
+                    for stmt in body
+                ]),
+            )
+        case ast.FunctionDef(name, ast.arguments([], [ast.arg("self"), *args]), body, []):
+            return js.ast.Property(
+                key=js.ast.Identifier(name),
+                value=js.ast.FunctionExpression(
+                    params=[
+                        methods_transform(arg)
+                        for arg in args
+                    ],
+                    body=js.ast.BlockStatement([
+                        methods_transform(stmt)
+                        for stmt in body
+                    ])
+                ),
+                method=True,
+            )
+        case ast.AugAssign(target, op, value):
+            return js.ast.ExpressionStatement(
+                js.ast.AssignmentExpression(
+                    left=methods_transform(target),
+                    operator=methods_transform(op)+"=",
+                    right=methods_transform(value),
+                ),
+            )
+        case ast.Add():
+            return "+"
+        case ast.Name("self"):
+            return js.ast.Identifier(
+                name="this",
+            )
+    return transform(py_ast, methods_transform)
+
+
+def js_component_ast(cls):
     dp = DataProxy()
     cls.data(dp)
-    print(dp.vue_data_func)
-    render_res = cls.render(None)
-    print(render_res)
-    methods_source = "class module:\n" + inspect.getsource(cls.methods)
-    print(methods_source)
-    methods_py_ast = ast.parse(methods_source)
-    print(ast.dump(methods_py_ast.body[0].body[0]))
+    data_js_ast = dp.vue_data_ast
 
-test(MyComponent)
+    rp = RenderProxy()
+    render_res = cls.render(rp)
+    render_js_ast = js.ast.Property(
+        key=js.ast.Identifier("render"),
+        value=js.ast.FunctionExpression(
+            js.ast.BlockStatement([
+                js.ast.ReturnStatement(
+                    render_res.vue_render_ast
+                ),
+            ]),
+        ),
+        method=True,
+    )
+
+    methods_source = "class module:\n" + inspect.getsource(cls.methods)
+    methods_py_ast = ast.parse(methods_source)
+    methods_js_ast = methods_transform(methods_py_ast)
+
+    return js.ast.ObjectExpression([
+        data_js_ast,
+        methods_js_ast,
+        render_js_ast,
+    ])
+
+
+def vue_prg_ast(js_ast):
+    return js.ast.Program([
+        js.ast.ExpressionStatement(
+            js.ast.CallExpression(
+                callee=js.ast.MemberExpression(
+                    object=js.ast.CallExpression(
+                        callee=js.ast.MemberExpression(
+                            object=js.ast.Identifier("Vue"),
+                            property=js.ast.Identifier("createApp"),
+                        ),
+                        arguments=[
+                            js_ast,
+                        ],
+                    ),
+                    property=js.ast.Identifier("mount"),
+                ),
+                arguments=[
+                    js.ast.Literal("#app"),
+                ],
+            )
+        )
+    ])
 
 import fastapi
 
@@ -471,7 +582,13 @@ js_ast = js.ast.Program([
 ])
 
 print(js.ast.unparse(js_ast))
-
+print(
+    js.ast.unparse(
+        vue_prg_ast(
+            js_component_ast(MyComponent)
+        )
+    )
+)
 
 @app.get("/", response_class=fastapi.responses.HTMLResponse)
 def get_root():
@@ -482,7 +599,13 @@ def get_root():
             </head>
             <body>
                 <div id="app"></div>
-                <script>{js.ast.unparse(js_ast)}</script>
+                <script>{
+                    js.ast.unparse(
+                        vue_prg_ast(
+                            js_component_ast(MyComponent)
+                        )
+                    )
+                }</script>
             </body>
         </html>
     """
