@@ -8,20 +8,8 @@ from vaste.js.transformer.methods import MethodsTransformer
 
 from vaste.js.decorator.program import program
 
+from vaste.js.builtin import *
 
-class JsObj:
-
-    def __getattribute__(self, k):
-        return self
-
-    def __call__(self, *args, **kwds):
-        return self
-
-
-window = JsObj()
-alert = JsObj()
-console = JsObj()
-Vue = JsObj()
 
 @program
 class MyJsProgram:
@@ -30,6 +18,9 @@ class MyJsProgram:
 
 print(MyJsProgram.unparse())
 print(MyJsProgram)
+print(window)
+print(window.alert)
+print(window.alert("TEST"))
 exit(0)
 
 def vnode_transform(vnode):
