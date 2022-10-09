@@ -3,49 +3,15 @@ import inspect
 
 from vaste import js
 
-
-def transform(py_ast, transform_cb=None):
-    if transform_cb is None:
-        transform_cb = transform
-    match py_ast:
-        case ast.Module(body):
-            return js.ast.Program([
-                transform_cb(stmt_ast)
-                for stmt_ast in body
-            ])
-        case ast.Expr(value):
-            return js.ast.ExpressionStatement(
-                transform_cb(value)
-            )
-        case ast.Call(func, args):
-            return js.ast.CallExpression(
-                callee=transform_cb(func),
-                arguments=[
-                    transform_cb(expr_ast)
-                    for expr_ast in args
-                ],
-            )
-        case ast.Attribute(value, attr):
-            return js.ast.MemberExpression(
-                object=transform_cb(value),
-                property=js.ast.Identifier(attr),
-            )
-        case ast.Name(id):
-            return js.ast.Identifier(
-                name=id,
-            )
-        case ast.Constant(value):
-            return js.ast.Literal(
-                value=value
-            )
-    raise Exception(f"Unmatched ast : {ast.dump(py_ast)}")
+from vaste.js.transformer.default import DefaultTransformer
+from vaste.js.transformer.methods import MethodsTransformer
 
 
 class JsModule:
 
     def __init__(self, py_ast):
         self.py_ast = py_ast
-        self.js_ast = transform(py_ast)
+        self.js_ast = DefaultTransformer().transform(py_ast)
 
     def code(self):
         # return ast.unparse(self.py_ast)
@@ -255,60 +221,6 @@ class RenderProxy:
         return RenderProxy.Member(k)
 
 
-def methods_transform(py_ast):
-    match py_ast:
-        case ast.Module([module_cls]):
-            return methods_transform(module_cls)
-        case ast.ClassDef("module", [], [], [methods_cls], []):
-            return methods_transform(methods_cls)
-        case ast.ClassDef("methods", [], [], body, []):
-            return js.ast.Property(
-                key=js.ast.Identifier("methods"),
-                value=js.ast.ObjectExpression([
-                    methods_transform(stmt)
-                    for stmt in body
-                ]),
-            )
-        case ast.FunctionDef(name, ast.arguments([], [ast.arg("self"), *args]), body, []):
-            return js.ast.Property(
-                key=js.ast.Identifier(name),
-                value=js.ast.FunctionExpression(
-                    params=[
-                        methods_transform(arg)
-                        for arg in args
-                    ],
-                    body=js.ast.BlockStatement([
-                        methods_transform(stmt)
-                        for stmt in body
-                    ])
-                ),
-                method=True,
-            )
-        case ast.AugAssign(target, op, value):
-            return js.ast.ExpressionStatement(
-                js.ast.AssignmentExpression(
-                    left=methods_transform(target),
-                    operator=methods_transform(op)+"=",
-                    right=methods_transform(value),
-                ),
-            )
-        case ast.Assign([target], value):
-            return js.ast.ExpressionStatement(
-                js.ast.AssignmentExpression(
-                    left=methods_transform(target),
-                    operator="=",
-                    right=methods_transform(value),
-                ),
-            )
-        case ast.Add():
-            return "+"
-        case ast.Name("self"):
-            return js.ast.Identifier(
-                name="this",
-            )
-    return transform(py_ast, methods_transform)
-
-
 def js_component_ast(cls):
     dp = DataProxy()
     cls.data(dp)
@@ -330,7 +242,7 @@ def js_component_ast(cls):
 
     methods_source = "class module:\n" + inspect.getsource(cls.methods)
     methods_py_ast = ast.parse(methods_source)
-    methods_js_ast = methods_transform(methods_py_ast)
+    methods_js_ast = MethodsTransformer().transform(methods_py_ast)
 
     return js.ast.ObjectExpression([
         data_js_ast,
