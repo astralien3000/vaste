@@ -13,6 +13,9 @@ class Program:
             stmt.unparse() for stmt in self.body
         ])
 
+    def __repr__(self):
+        return f"""Program(body={self.body})"""
+
 
 class VariableDeclaration:
     def __init__(self, declarations: list, kind: str = "let"):
@@ -33,6 +36,9 @@ class Identifier:
     def unparse(self):
         return self.name
 
+    def __repr__(self):
+        return f"""Identifier(name="{self.name}")"""
+
 
 class ArrayExpression:
     def __init__(self, elements: list):
@@ -48,6 +54,12 @@ class Literal:
             case str():
                 return f'"{self.value}"'
         return str(self.value)
+
+    def __repr__(self):
+        match self.value:
+            case str():
+                return f"""Literal(value="{self.value}")"""
+        return f"""Literal(value={self.value})"""
 
 
 class FunctionDeclaration:
@@ -76,6 +88,9 @@ class ExpressionStatement:
     def unparse(self):
         return f"{self.expression.unparse()};"
 
+    def __repr__(self):
+        return f"""ExpressionStatement(expression={self.expression})"""
+
 
 class CallExpression:
     def __init__(self, callee, arguments: list):
@@ -88,6 +103,14 @@ class CallExpression:
             for arg in self.arguments
         ])})"""
 
+    def __repr__(self):
+        return f"""CallExpression({
+            ", ".join([
+                f"callee={self.callee}",
+                f"arguments={self.arguments}",
+            ])
+        })"""
+
 
 class MemberExpression:
     def __init__(self, object, property):
@@ -96,6 +119,14 @@ class MemberExpression:
 
     def unparse(self):
         return f"{self.object.unparse()}.{self.property.unparse()}"
+
+    def __repr__(self):
+        return f"""CallExpression({
+            ", ".join([
+                f"object={self.object}",
+                f"property={self.property}",
+            ])
+        })"""
 
 
 class ArrowFunctionExpression:

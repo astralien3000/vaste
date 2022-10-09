@@ -6,24 +6,7 @@ from vaste import js
 from vaste.js.transformer.default import DefaultTransformer
 from vaste.js.transformer.methods import MethodsTransformer
 
-
-class JsModule:
-
-    def __init__(self, py_ast):
-        self.py_ast = py_ast
-        self.js_ast = DefaultTransformer().transform(py_ast)
-
-    def code(self):
-        # return ast.unparse(self.py_ast)
-        return js.ast.unparse(self.js_ast)
-
-
-def javascript(cls):
-    cls_ast = ast.parse(
-        inspect.getsource(cls),
-        mode="exec",
-    )
-    return JsModule(ast.Module(cls_ast.body[0].body, []))
+from vaste.js.decorator.program import program
 
 
 class JsObj:
@@ -40,11 +23,14 @@ alert = JsObj()
 console = JsObj()
 Vue = JsObj()
 
-@javascript
-class MyJsModule:
+@program
+class MyJsProgram:
     console.log("test")
     alert("LOOL")
 
+print(MyJsProgram.unparse())
+print(MyJsProgram)
+exit(0)
 
 def vnode_transform(vnode):
     if hasattr(vnode, "vue_render_ast"):
