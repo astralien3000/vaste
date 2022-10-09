@@ -24,7 +24,10 @@ class MyComponent:
 
         def inc(self):
             self.count += 10
-        
+
+        def dec(self):
+            self.count -= 2
+
         def reset(self):
             self.count = 0
 
@@ -36,7 +39,9 @@ class MyComponent:
                     a(
                         Class="navbar-brand",
                         href="#",
-                        children="Title?",
+                        children=[
+                            document.baseURI
+                        ],
                     ),
                 ],
             ),
@@ -61,6 +66,7 @@ class MyComponent:
                                 y=0,
                                 width=100,
                                 height=self.count + 50,
+                                onClick=self.dec,
                             )
                         ],
                     ),

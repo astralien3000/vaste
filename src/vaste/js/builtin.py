@@ -15,6 +15,8 @@ class JsObjectRef:
         })"""
 
     def __getattribute__(self, k):
+        if k in ["ast", dir(JsObjectRef)]:
+            return object.__getattribute__(self, k)
         return JsObjectRef(
             js.ast.MemberExpression(
                 object.__getattribute__(self, "ast"),
@@ -37,3 +39,4 @@ class JsObjectRef:
 window = JsObjectRef(js.ast.Identifier("window"))
 alert = JsObjectRef(js.ast.Identifier("alert"))
 console = JsObjectRef(js.ast.Identifier("console"))
+document = JsObjectRef(js.ast.Identifier("document"))

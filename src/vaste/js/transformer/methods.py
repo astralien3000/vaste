@@ -50,6 +50,8 @@ class MethodsTransformer(DefaultTransformer):
                 )
             case ast.Add():
                 return "+"
+            case ast.Sub():
+                return "-"
             case ast.Name("self"):
                 return js.ast.Identifier(
                     name="this",
