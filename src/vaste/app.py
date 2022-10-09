@@ -1,4 +1,5 @@
 import fastapi
+from fastapi.responses import HTMLResponse
 
 from vaste import js
 
@@ -8,10 +9,10 @@ class VasteApp(fastapi.FastAPI):
     def __init__(self, component):
         super().__init__()
         self.component = component
-        
-        @self.get("/", response_class=fastapi.responses.HTMLResponse)
+
+        @self.get("/")
         def get_root():
-            return f"""
+            return HTMLResponse(f"""
                 <html>
                     <head>
                         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
@@ -27,7 +28,7 @@ class VasteApp(fastapi.FastAPI):
                         }</script>
                     </body>
                 </html>
-            """
+            """)
 
     @property
     def ast(self):

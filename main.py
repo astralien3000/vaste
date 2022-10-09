@@ -1,20 +1,11 @@
-import ast
-import inspect
+from vaste import (
+    VasteApp,
+    component,
+    document,
+)
 
-from vaste import js
-
-from vaste.js.transformer.default import DefaultTransformer
-from vaste.js.transformer.methods import MethodsTransformer
-
-from vaste.js.decorator.program import program
-
-from vaste.js.builtin import *
-from vaste.vue.html import *
-from vaste.vue.svg import *
-
-from vaste.vue.decorator.component import component
-
-from vaste.app import VasteApp
+from vaste.html import *
+from vaste.svg import *
 
 
 @component
