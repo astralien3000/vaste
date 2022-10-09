@@ -10,72 +10,8 @@ from vaste.js.decorator.program import program
 
 from vaste.js.builtin import *
 
-
-@program
-class MyJsProgram:
-    console.log("test")
-    alert("LOOL")
-
-print(MyJsProgram.unparse())
-print(MyJsProgram)
-print(window)
-print(window.alert)
-print(window.alert("TEST"))
-exit(0)
-
-def vnode_transform(vnode):
-    if hasattr(vnode, "vue_render_ast"):
-        return vnode.vue_render_ast
-    else:
-        return js.ast.Literal(vnode)
-
-
-class HtmlTag:
-    def __init__(self, name):
-        self.name = name
-    
-    class VNode:
-        def __init__(self, type, props, children):
-            self.type = type
-            self.props = props
-            self.children = children
-        
-        @property
-        def vue_render_ast(self):
-            return js.ast.CallExpression(
-                callee=js.ast.MemberExpression(
-                    object=js.ast.Identifier("Vue"),
-                    property=js.ast.Identifier("h"),
-                ),
-                arguments=[
-                    js.ast.Literal(self.type),
-                    js.ast.ObjectExpression([
-                        js.ast.Property(
-                            key=js.ast.Identifier(k),
-                            value=vnode_transform(v),
-                        )
-                        for k, v in self.props.items()
-                    ]),
-                    js.ast.ArrayExpression([
-                        vnode_transform(child)
-                        for child in self.children
-                    ]),
-                ],
-            )
-
-    def __call__(self, children = [], **kwargs):
-        return self.VNode(
-            type=self.name,
-            children=children,
-            props=kwargs,
-        )
-
-button = HtmlTag("button")
-svg = HtmlTag("svg")
-rect = HtmlTag("rect")
-div = HtmlTag("div")
-nav = HtmlTag("nav")
-a = HtmlTag("a")
+from vaste.vue.html import *
+from vaste.vue.svg import *
 
 
 class MyComponent:
@@ -171,9 +107,9 @@ class RenderProxy:
             self.other = other
         
         @property
-        def vue_render_ast(self):
+        def ast(self):
             return js.ast.BinaryExpression(
-                left=self.member.vue_render_ast,
+                left=self.member.ast,
                 operator=self.operator,
                 right=js.ast.Literal(self.other),
             )
@@ -188,7 +124,7 @@ class RenderProxy:
             )
 
         @property
-        def vue_render_ast(self):
+        def ast(self):
             return js.ast.MemberExpression(
                 object=js.ast.Identifier("this"),
                 property=js.ast.Identifier(self.k),
@@ -210,7 +146,7 @@ def js_component_ast(cls):
         value=js.ast.FunctionExpression(
             js.ast.BlockStatement([
                 js.ast.ReturnStatement(
-                    render_res.vue_render_ast
+                    render_res.ast
                 ),
             ]),
         ),
