@@ -2,6 +2,20 @@ import fastapi
 from fastapi.responses import HTMLResponse
 
 from vaste import js
+from vaste.js.builtin import JsObjectRef
+
+from collections import deque
+
+
+class Unquote:
+    def __init__(self):
+        self.data = deque()
+
+    def __call__(self, arg):
+        self.data.append(arg)
+    
+    def pop(self):
+        return self.data.popleft()
 
 
 class VasteApp(fastapi.FastAPI):
@@ -32,24 +46,13 @@ class VasteApp(fastapi.FastAPI):
 
     @property
     def ast(self):
-        return js.ast.Program([
-            js.ast.ExpressionStatement(
-                js.ast.CallExpression(
-                    callee=js.ast.MemberExpression(
-                        object=js.ast.CallExpression(
-                            callee=js.ast.MemberExpression(
-                                object=js.ast.Identifier("Vue"),
-                                property=js.ast.Identifier("createApp"),
-                            ),
-                            arguments=[
-                                self.component.ast,
-                            ],
-                        ),
-                        property=js.ast.Identifier("mount"),
-                    ),
-                    arguments=[
-                        js.ast.Literal("#app"),
-                    ],
-                )
-            )
-        ])
+        Vue = JsObjectRef(js.ast.Identifier("Vue"))
+        UNQUOTE = Unquote()
+
+        @js.fprogram(UNQUOTE)
+        class MainProgram:
+            Vue.createApp(
+                UNQUOTE(self.component.ast)
+            ).mount("#app")
+
+        return MainProgram
