@@ -4,8 +4,8 @@ from vaste import (
     document,
 )
 
-from vaste.html import *
-from vaste.svg import *
+from vaste.vue.html import *
+from vaste.vue.svg import *
 
 
 @component
