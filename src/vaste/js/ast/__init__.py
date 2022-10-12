@@ -225,3 +225,30 @@ class ArrayExpression:
                 for elem in self.elements
             ])
         }]"""
+
+
+class ImportDeclaration:
+    def __init__(self, specifiers: list, source):
+        self.specifiers = specifiers
+        self.source = source
+
+    def unparse(self):
+        return f"""import {
+            ",".join([
+                spec.unparse()
+                for spec in self.specifiers
+            ])
+        } from {
+            self.source.unparse()
+        };"""
+
+
+class ImportNamespaceSpecifier:
+    def __init__(self, local):
+        self.local = local
+
+    def unparse(self):
+        return f"""* as {
+            self.local.unparse()
+        }"""
+
