@@ -23,6 +23,10 @@ class Unquote:
         return self.data.popleft()
 
 
+jsimport = JsObjectRef(js.ast.Identifier("import"))
+UNQUOTE = Unquote()
+
+
 class VasteApp(fastapi.FastAPI):
 
     def __init__(self, component):
@@ -74,9 +78,6 @@ class VasteApp(fastapi.FastAPI):
 
     @property
     def ast(self):
-        jsimport = JsObjectRef(js.ast.Identifier("import"))
-        UNQUOTE = Unquote()
-
         @js.fprogram(UNQUOTE)
         class MainProgram:
             Vue = jsimport("vue")
