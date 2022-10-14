@@ -3,28 +3,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from vaste import js
-from vaste.js.builtin import JsObjectRef
-
-from collections import deque
 
 from vaste import html
 
 import os
-
-
-class Unquote:
-    def __init__(self):
-        self.data = deque()
-
-    def __call__(self, arg):
-        self.data.append(arg)
-    
-    def pop(self):
-        return self.data.popleft()
-
-
-jsimport = JsObjectRef(js.ast.Identifier("import"))
-UNQUOTE = Unquote()
 
 
 class VasteApp(fastapi.FastAPI):
@@ -44,19 +26,12 @@ class VasteApp(fastapi.FastAPI):
 
         os.system("node node_modules/vite/bin/vite.js build")
 
-        # @self.get("/")
-        # def get_root():
-        #     return HTMLResponse(self.index)
-
         self.mount("", StaticFiles(directory="dist", html=True))
 
     @property
     def index(self):
         return  html.html([
             html.head([
-                # html.script(
-                #     src="https://unpkg.com/vue@3/dist/vue.global.js",
-                # ),
                 html.link(
                     rel="stylesheet",
                     href="main.scss",
@@ -64,11 +39,6 @@ class VasteApp(fastapi.FastAPI):
             ]),
             html.body([
                 html.div(id="app"),
-                # html.script([
-                #     js.ast.unparse(
-                #         self.ast
-                #     )
-                # ])
                 html.script(
                     src="main.js",
                     type="module",
@@ -78,12 +48,15 @@ class VasteApp(fastapi.FastAPI):
 
     @property
     def ast(self):
-        @js.fprogram(UNQUOTE)
+
+        @js.program
         class MainProgram:
-            Vue = jsimport("vue")
+            Vue = js.lang.import_from("vue")
 
             Vue.createApp(
-                UNQUOTE(self.component.ast)
+                js.lang.unquote(self.component.ast)
             ).mount("#app")
+        
+        print(MainProgram)
 
         return MainProgram

@@ -9,6 +9,9 @@ class VueComponent:
     def __init__(self, name, ast):
         self.name = name
         self.ast = ast
+    
+    def __repr__(self):
+        return f"""VueComponent(name={self.name}, ast={self.ast})"""
 
 
 class DataProxy:

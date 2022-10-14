@@ -1,7 +1,7 @@
 from vaste import (
     VasteApp,
     component,
-    document,
+    js,
 )
 
 from vaste.vue.html import *
@@ -35,7 +35,7 @@ class MyComponent:
                         Class="navbar-brand",
                         href="#",
                         children=[
-                            document.baseURI
+                            # js.bom.document.baseURI
                         ],
                     ),
                 ],
