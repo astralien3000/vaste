@@ -19,7 +19,7 @@ class InjectAstJsMacro(JsMacro):
                 return ast.dump(func) == ast.dump(path2ast(path))
         return False
 
-    def transform(self, path, py_ast):
+    def transform(self, parent, py_ast):
         return self.pop()
 
     def __repr__(self):

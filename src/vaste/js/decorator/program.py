@@ -23,29 +23,9 @@ class JsProgram:
         })"""
 
 
-def map_py2js(module, path = []):
-    return {
-        **{
-            (*path, k): getattr(module, k)
-            for k in dir(module)
-            if issubclass(type(getattr(module, k)), JsMacro)
-        },
-        **{
-            mk: mv
-            for k in dir(module)
-            if inspect.ismodule(getattr(module, k))
-            if k not in path
-            if len(path) == 0 or "vaste" in module.__package__.split(".")
-            for mk, mv in map_py2js(getattr(module, k), [*path, k]).items()
-        },
-    }
-
-
 def program(cls):
     cls_source = inspect.getsource(cls)
-    tansformer = MacroTransformer(
-        map_py2js(inspect.getmodule(cls))
-    )
+    tansformer = MacroTransformer(cls)
 
     try:
         cls_py_ast = ast.parse(cls_source)

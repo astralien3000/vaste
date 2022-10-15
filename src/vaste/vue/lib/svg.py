@@ -1,5 +1,5 @@
-from ..macro.vnode import VNodeFactory
+from ..macro.vnode import VNodeJsMacro
 
 
-svg = VNodeFactory("svg")
-rect = VNodeFactory("rect")
+svg = VNodeJsMacro("svg")
+rect = VNodeJsMacro("rect")

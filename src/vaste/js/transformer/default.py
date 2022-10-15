@@ -15,7 +15,7 @@ class DefaultTransformer:
                 return js.ast.ExpressionStatement(
                     self.transform(value)
                 )
-            case ast.Call(func, args):
+            case ast.Call(func, args, []):
                 return js.ast.CallExpression(
                     callee=self.transform(func),
                     arguments=[

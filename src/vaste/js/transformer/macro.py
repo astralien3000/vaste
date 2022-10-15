@@ -1,16 +1,35 @@
-from operator import attrgetter
 from .default import *
 
-from vaste import js
+from vaste.js.macro.macro import JsMacro
+
+import inspect
+
+
+def map_py2js(module, path = []):
+    return {
+        **{
+            (*path, k): getattr(module, k)
+            for k in dir(module)
+            if issubclass(type(getattr(module, k)), JsMacro)
+        },
+        **{
+            mk: mv
+            for k in dir(module)
+            if inspect.ismodule(getattr(module, k))
+            if k not in path
+            if len(path) == 0 or "vaste" in module.__package__.split(".")
+            for mk, mv in map_py2js(getattr(module, k), [*path, k]).items()
+        },
+    }
 
 
 class MacroTransformer(DefaultTransformer):
 
-    def __init__(self, macro_map):
-        self.macro_map = macro_map
+    def __init__(self, cls):
+        self.macro_map = map_py2js(inspect.getmodule(cls))
 
     def transform(self, py_ast):
         for path, macro in self.macro_map.items():
             if type(macro).match(macro, path, py_ast):
-                return type(macro).transform(macro, path, py_ast)
+                return type(macro).transform(macro, self, py_ast)
         return DefaultTransformer.transform(self, py_ast)

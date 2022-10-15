@@ -4,6 +4,7 @@ import inspect
 from vaste import js
 from vaste.vue.transformer.methods import MethodsTransformer
 from vaste.vue.transformer.data import DataTransformer
+from vaste.vue.transformer.render import RenderTransformer
 
 
 class VueComponent:
@@ -47,40 +48,40 @@ class VueComponent:
 #         )
 
 
-class RenderProxy:
+# class RenderProxy:
 
-    class MemberBOp:
-        def __init__(self, member, operator, other):
-            self.member = member
-            self.operator = operator
-            self.other = other
+#     class MemberBOp:
+#         def __init__(self, member, operator, other):
+#             self.member = member
+#             self.operator = operator
+#             self.other = other
         
-        @property
-        def ast(self):
-            return js.ast.BinaryExpression(
-                left=self.member.ast,
-                operator=self.operator,
-                right=js.ast.Literal(self.other),
-            )
+#         @property
+#         def ast(self):
+#             return js.ast.BinaryExpression(
+#                 left=self.member.ast,
+#                 operator=self.operator,
+#                 right=js.ast.Literal(self.other),
+#             )
 
-    class Member:
-        def __init__(self, k):
-            self.k = k
+#     class Member:
+#         def __init__(self, k):
+#             self.k = k
         
-        def __add__(self, other):
-            return RenderProxy.MemberBOp(
-                self, "+", other
-            )
+#         def __add__(self, other):
+#             return RenderProxy.MemberBOp(
+#                 self, "+", other
+#             )
 
-        @property
-        def ast(self):
-            return js.ast.MemberExpression(
-                object=js.ast.Identifier("this"),
-                property=js.ast.Identifier(self.k),
-            )
+#         @property
+#         def ast(self):
+#             return js.ast.MemberExpression(
+#                 object=js.ast.Identifier("this"),
+#                 property=js.ast.Identifier(self.k),
+#             )
 
-    def __getattr__(self, k):
-        return RenderProxy.Member(k)
+#     def __getattr__(self, k):
+#         return RenderProxy.Member(k)
 
 
 def component(cls):
@@ -92,19 +93,23 @@ def component(cls):
     data_py_ast = ast.parse(data_source)
     data_js_ast = DataTransformer().transform(data_py_ast)
 
-    rp = RenderProxy()
-    render_res = cls.render(rp)
-    render_js_ast = js.ast.Property(
-        key=js.ast.Identifier("render"),
-        value=js.ast.FunctionExpression(
-            js.ast.BlockStatement([
-                js.ast.ReturnStatement(
-                    render_res.ast
-                ),
-            ]),
-        ),
-        method=True,
-    )
+    # old_rp = RenderProxy()
+    # old_render_res = cls.render(old_rp)
+    # old_render_js_ast = js.ast.Property(
+    #     key=js.ast.Identifier("render"),
+    #     value=js.ast.FunctionExpression(
+    #         js.ast.BlockStatement([
+    #             js.ast.ReturnStatement(
+    #                 old_render_res.ast
+    #             ),
+    #         ]),
+    #     ),
+    #     method=True,
+    # )
+
+    render_source = "if True:\n" + inspect.getsource(cls.render)
+    render_py_ast = ast.parse(render_source)
+    render_js_ast = RenderTransformer(cls).transform(render_py_ast)
 
     methods_source = "class module:\n" + inspect.getsource(cls.methods)
     methods_py_ast = ast.parse(methods_source)
@@ -115,6 +120,7 @@ def component(cls):
         js.ast.ObjectExpression([
             data_js_ast,
             methods_js_ast,
+            # old_render_js_ast,
             render_js_ast,
         ])
     )

@@ -1,7 +1,7 @@
-from ..macro.vnode import VNodeFactory
+from ..macro.vnode import VNodeJsMacro
 
 
-button = VNodeFactory("button")
-div = VNodeFactory("div")
-nav = VNodeFactory("nav")
-a = VNodeFactory("a")
+button = VNodeJsMacro("button")
+div = VNodeJsMacro("div")
+nav = VNodeJsMacro("nav")
+a = VNodeJsMacro("a")

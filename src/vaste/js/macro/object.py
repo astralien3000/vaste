@@ -10,7 +10,7 @@ class ObjectJsMacro(JsMacro):
     def match(self, path, py_ast):
         return ast.dump(py_ast) == ast.dump(path2ast(path))
 
-    def transform(self, path, py_ast):
+    def transform(self, parent, py_ast):
         return js.ast.Identifier(object.__getattribute__(self, "name"))
 
     def __repr__(self):

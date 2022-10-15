@@ -21,7 +21,7 @@ class ImportFromJsMacro(JsMacro):
                 return ast.dump(func) == ast.dump(path2ast(path))
         return False
 
-    def transform(self, path, py_ast):
+    def transform(self, parent, py_ast):
         match py_ast:
             case ast.Assign(
                 [ast.Name(spec_name)],
