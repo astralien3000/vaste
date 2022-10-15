@@ -59,60 +59,61 @@ class VNodeJsMacro(JsMacro):
                 return ast.dump(func) == ast.dump(path2ast(path))
         return False
 
-    def transform(self, parent, py_ast):
-        match py_ast:
-            case ast.Call(
-                _,
-                [],
-                kwargs,
-            ):
-                return js.ast.CallExpression(
-                    callee=js.ast.MemberExpression(
-                        object=js.ast.Identifier("vue"),
-                        property=js.ast.Identifier("h"),
-                    ),
-                    arguments=[
-                        js.ast.Literal(self.name),
-                        js.ast.ObjectExpression([
-                            self.transform(parent, kwarg)
-                            for kwarg in kwargs
-                            if kwarg.arg != "children"
-                        ]),
-                        js.ast.ArrayExpression([
-                            parent.transform(elt)
-                            for kwarg in kwargs
-                            if kwarg.arg == "children"
-                            for elt in kwarg.value.elts
-                        ]),
-                    ],
-                )
-            case ast.Call(
-                _,
-                [children_arg],
-                kwargs,
-            ):
-                return js.ast.CallExpression(
-                    callee=js.ast.MemberExpression(
-                        object=js.ast.Identifier("vue"),
-                        property=js.ast.Identifier("h"),
-                    ),
-                    arguments=[
-                        js.ast.Literal(self.name),
-                        js.ast.ObjectExpression([
-                            self.transform(parent, kwarg)
-                            for kwarg in kwargs
-                            if kwarg.arg != "children"
-                        ]),
-                        js.ast.ArrayExpression([
-                            parent.transform(elt)
-                            for elt in children_arg.elts
-                        ]),
-                    ],
-                )
-            case ast.keyword(arg, value):
-                return js.ast.Property(
-                    key=js.ast.Identifier(arg),
-                    value=parent.transform(value)
-                )
-        # return parent.transform(py_ast)
-        raise Exception(f"[VNodeJsMacro] Unmatched ast : {ast.dump(py_ast)}")
+    class Transformer(JsMacro.Transformer):
+
+        def transform(self, py_ast):
+            match py_ast:
+                case ast.Call(
+                    _,
+                    [],
+                    kwargs,
+                ):
+                    return js.ast.CallExpression(
+                        callee=js.ast.MemberExpression(
+                            object=js.ast.Identifier("vue"),
+                            property=js.ast.Identifier("h"),
+                        ),
+                        arguments=[
+                            js.ast.Literal(self.macro.name),
+                            js.ast.ObjectExpression([
+                                self.transform(kwarg)
+                                for kwarg in kwargs
+                                if kwarg.arg != "children"
+                            ]),
+                            js.ast.ArrayExpression([
+                                self.parent.transform(elt)
+                                for kwarg in kwargs
+                                if kwarg.arg == "children"
+                                for elt in kwarg.value.elts
+                            ]),
+                        ],
+                    )
+                case ast.Call(
+                    _,
+                    [children_arg],
+                    kwargs,
+                ):
+                    return js.ast.CallExpression(
+                        callee=js.ast.MemberExpression(
+                            object=js.ast.Identifier("vue"),
+                            property=js.ast.Identifier("h"),
+                        ),
+                        arguments=[
+                            js.ast.Literal(self.macro.name),
+                            js.ast.ObjectExpression([
+                                self.transform(kwarg)
+                                for kwarg in kwargs
+                                if kwarg.arg != "children"
+                            ]),
+                            js.ast.ArrayExpression([
+                                self.parent.transform(elt)
+                                for elt in children_arg.elts
+                            ]),
+                        ],
+                    )
+                case ast.keyword(arg, value):
+                    return js.ast.Property(
+                        key=js.ast.Identifier(arg),
+                        value=self.parent.transform(value)
+                    )
+            raise Exception(f"[VNodeJsMacro] Unmatched ast : {ast.dump(py_ast)}")

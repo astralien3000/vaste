@@ -2,7 +2,7 @@ import ast
 import inspect
 
 from vaste.js.transformer.default import DefaultTransformer
-from vaste.js.transformer.macro import MacroTransformer
+from vaste.js.transformer.macro import MacroExpansionTransformer
 from vaste import js
 
 from vaste.js.macro.macro import JsMacro
@@ -25,7 +25,7 @@ class JsProgram:
 
 def program(cls):
     cls_source = inspect.getsource(cls)
-    tansformer = MacroTransformer(cls)
+    tansformer = MacroExpansionTransformer(cls)
 
     try:
         cls_py_ast = ast.parse(cls_source)

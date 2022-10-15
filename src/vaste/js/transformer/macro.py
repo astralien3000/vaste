@@ -23,7 +23,7 @@ def map_py2js(module, path = []):
     }
 
 
-class MacroTransformer(DefaultTransformer):
+class MacroExpansionTransformer(DefaultTransformer):
 
     def __init__(self, cls):
         self.macro_map = map_py2js(inspect.getmodule(cls))
@@ -31,5 +31,9 @@ class MacroTransformer(DefaultTransformer):
     def transform(self, py_ast):
         for path, macro in self.macro_map.items():
             if type(macro).match(macro, path, py_ast):
-                return type(macro).transform(macro, self, py_ast)
+                return type(macro).transformer(
+                    self=macro,
+                    parent=self,
+                    path=path,
+                ).transform(py_ast)
         return DefaultTransformer.transform(self, py_ast)

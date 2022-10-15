@@ -1,7 +1,7 @@
 from vaste.js.transformer.macro import *
 
 
-class RenderTransformer(MacroTransformer):
+class RenderTransformer(MacroExpansionTransformer):
 
     def transform(self, py_ast):
         match py_ast:
@@ -29,4 +29,4 @@ class RenderTransformer(MacroTransformer):
                 return js.ast.Identifier(
                     name="this",
                 )
-        return MacroTransformer.transform(self, py_ast)
+        return MacroExpansionTransformer.transform(self, py_ast)
