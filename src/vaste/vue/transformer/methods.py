@@ -1,4 +1,4 @@
-from .default import *
+from ...js.transformer.default import *
 
 
 class MethodsTransformer(DefaultTransformer):

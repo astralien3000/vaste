@@ -1,4 +1,4 @@
-from .vnode import VNodeFactory
+from ..macro.vnode import VNodeFactory
 
 
 button = VNodeFactory("button")

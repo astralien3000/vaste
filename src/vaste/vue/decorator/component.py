@@ -2,7 +2,7 @@ import ast
 import inspect
 
 from vaste import js
-from vaste.js.transformer.methods import MethodsTransformer
+from vaste.vue.transformer.methods import MethodsTransformer
 
 
 class VueComponent:
