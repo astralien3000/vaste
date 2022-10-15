@@ -35,6 +35,7 @@ def map_py2js(module, path = []):
             for k in dir(module)
             if inspect.ismodule(getattr(module, k))
             if k not in path
+            if len(path) == 0 or "vaste" in module.__package__.split(".")
             for mk, mv in map_py2js(getattr(module, k), [*path, k]).items()
         },
     }
@@ -61,45 +62,3 @@ def program(cls):
     raise Exception(
         f"Unable to generate JsProgram from {ast.dump(cls_py_ast)}"
     )
-
-
-# def fprogram(inject_ast):
-#     def decorator(cls):
-#         print(map_py2js(inspect.getmodule(cls)))
-#         cls_source = inspect.getsource(cls)
-
-#         try:
-#             cls_py_ast = ast.parse(cls_source)
-#         except IndentationError:
-#             cls_py_ast = ast.parse("if True:\n" + cls_source)
-
-#         match cls_py_ast:
-#             case ast.Module([
-#                 ast.ClassDef(
-#                     name,
-#                     [],
-#                     [],
-#                     body,
-#                     [ast.Call(_, [ast.Name(inject_ast_name)])],
-#                 )
-#             ]):
-#                 cls_js_ast = MacroTransformer(inject_ast, inject_ast_name).transform(ast.Module(body))
-#                 return JsProgram(name, cls_js_ast)
-#             case ast.Module([
-#                 ast.If(
-#                     ast.Constant(True),
-#                     [ast.ClassDef(
-#                         name,
-#                         [],
-#                         [],
-#                         body,
-#                         [ast.Call(_, [ast.Name(inject_ast_name)])]
-#                     )]
-#                 )
-#             ]):
-#                 cls_js_ast = MacroTransformer(inject_ast, inject_ast_name).transform(ast.Module(body))
-#                 return JsProgram(name, cls_js_ast)
-#         raise Exception(
-#             f"Unable to generate JsProgram from {ast.dump(cls_py_ast)}"
-#         )
-#     return decorator
