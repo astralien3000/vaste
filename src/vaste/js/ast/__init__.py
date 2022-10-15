@@ -1,5 +1,8 @@
 
 
+from types import NoneType
+
+
 def unparse(ast):
     return ast.unparse()
 
@@ -51,12 +54,16 @@ class Literal:
 
     def unparse(self):
         match self.value:
+            case NoneType():
+                return "null"
             case str():
                 return f'"{self.value}"'
         return str(self.value)
 
     def __repr__(self):
         match self.value:
+            case NoneType():
+                return f"""Literal(value=null)"""
             case str():
                 return f"""Literal(value="{self.value}")"""
         return f"""Literal(value={self.value})"""
@@ -67,6 +74,23 @@ class FunctionDeclaration:
         self.id = id
         self.body = body
         self.params = params
+
+    def unparse(self):
+        return f"""function {self.id.unparse()}({
+            ",".join([
+                param.unparse()
+                for param in self.params
+            ])
+        }){self.body.unparse()};"""
+
+    def __repr__(self):
+        return f"""FunctionDeclaration({
+            ", ".join([
+                f"id={self.id}",
+                f"body={self.body}",
+                f"params={self.params}",
+            ])
+        })"""
 
 
 class BlockStatement:
@@ -79,6 +103,14 @@ class BlockStatement:
                 stmt.unparse() for stmt in self.body
             ])
         }}}"""
+
+    def __repr__(self):
+        return f"""BlockStatement({
+            ", ".join([
+                f"id={stmt}"
+                for stmt in self.body
+            ])
+        })"""
 
 
 class ExpressionStatement:
@@ -144,6 +176,15 @@ class BinaryExpression:
     def unparse(self):
         return f"{self.left.unparse()}{self.operator}{self.right.unparse()}"
 
+    def __repr__(self):
+        return f"""BinaryExpression({
+            ", ".join([
+                f"left={self.left}",
+                f"operator={self.operator}",
+                f"right={self.right}",
+            ])
+        })"""
+
 
 class AssignmentExpression:
     def __init__(self, left, operator: str, right):
@@ -153,6 +194,15 @@ class AssignmentExpression:
 
     def unparse(self):
         return f"{self.left.unparse()}{self.operator}{self.right.unparse()}"
+
+    def __repr__(self):
+        return f"""AssignmentExpression({
+            ", ".join([
+                f"left={self.left}",
+                f"operator='{self.operator}'",
+                f"right={self.right}",
+            ])
+        })"""
 
 
 class TemplateLiteral:
@@ -178,6 +228,13 @@ class ObjectExpression:
             ])
         }}}"""
 
+    def __repr__(self):
+        return f"""ObjectExpression({
+            ", ".join([
+                f"properties={self.properties}",
+            ])
+        })"""
+
 
 class Property:
     def __init__(self, key: str, value, method: bool = False):
@@ -190,6 +247,15 @@ class Property:
             return f"{self.key.unparse()}{self.value.unparse()}"
         else:
             return f"{self.key.unparse()}:{self.value.unparse()}"
+
+    def __repr__(self):
+        return f"""Property({
+            ", ".join([
+                f"key={self.key}",
+                f"value={self.value}",
+                f"method={self.method}",
+            ])
+        })"""
 
 
 class FunctionExpression:
@@ -213,6 +279,13 @@ class ReturnStatement:
     def unparse(self):
         return f"return {self.argument.unparse()};"
 
+    def __repr__(self):
+        return f"""ReturnStatement({
+            ", ".join([
+                f"argument={self.argument}",
+            ])
+        })"""
+
 
 class ArrayExpression:
     def __init__(self, elements: list = []):
@@ -225,6 +298,13 @@ class ArrayExpression:
                 for elem in self.elements
             ])
         }]"""
+
+    def __repr__(self):
+        return f"""ArrayExpression({
+            ", ".join([
+                f"elements={self.elements}",
+            ])
+        })"""
 
 
 class ImportDeclaration:
@@ -242,6 +322,14 @@ class ImportDeclaration:
             self.source.unparse()
         };"""
 
+    def __repr__(self):
+        return f"""ImportDeclaration({
+            ", ".join([
+                f"specifiers={self.specifiers}",
+                f"source={self.source}",
+            ])
+        })"""
+
 
 class ImportNamespaceSpecifier:
     def __init__(self, local):
@@ -251,4 +339,11 @@ class ImportNamespaceSpecifier:
         return f"""* as {
             self.local.unparse()
         }"""
+
+    def __repr__(self):
+        return f"""ImportNamespaceSpecifier({
+            ", ".join([
+                f"local={self.local}",
+            ])
+        })"""
 

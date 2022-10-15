@@ -36,4 +36,51 @@ class DefaultTransformer:
                 return js.ast.Literal(
                     value=value
                 )
+            case ast.FunctionDef(name, ast.arguments([], [*args]), body, []):
+                return js.ast.FunctionDeclaration(
+                    id=js.ast.Identifier(name),
+                    params=[
+                        self.transform(arg)
+                        for arg in args
+                    ],
+                    body=js.ast.BlockStatement([
+                        self.transform(stmt)
+                        for stmt in body
+                    ])
+                )
+            case ast.arg(name):
+                return js.ast.Identifier(name)
+            case ast.Return(value):
+                return js.ast.ReturnStatement(
+                    self.transform(value)
+                )
+            case ast.BinOp(left, op, right):
+                return js.ast.BinaryExpression(
+                    left=self.transform(left),
+                    operator=self.transform(op),
+                    right=self.transform(right),
+                )
+            case ast.Add():
+                return "+"
+            case ast.Assign([target], value):
+                return js.ast.ExpressionStatement(
+                    js.ast.AssignmentExpression(
+                        left=self.transform(target),
+                        operator="=",
+                        right=self.transform(value),
+                    ),
+                )
+            case ast.List(elts):
+                return js.ast.ArrayExpression([
+                    self.transform(elt)
+                    for elt in elts
+                ])
+            case ast.Dict(keys, values):
+                return js.ast.ObjectExpression([
+                    js.ast.Property(
+                        key=self.transform(key),
+                        value=self.transform(value),
+                    )
+                    for key, value in zip(keys, values)
+                ])
         raise Exception(f"Unmatched ast : {ast.dump(py_ast)}")
