@@ -4,14 +4,13 @@ a = "python variable"
 
 @js.program
 class MyProgram:
-    test = js.lang.import_from("test")
-    js.bom.alert("Hello, Alert !")
+    # js.bom.alert("Hello, Alert !")
     js.bom.console.log("Hello, Console !")
     js.lang.inject_ast(js.ast.Literal(a))
 
     def add(a, b):
         return a + b
-    
+
     color_list = [
         "red",
         "green",
@@ -31,3 +30,18 @@ class MyProgram:
 
 print(MyProgram)
 print(MyProgram.unparse())
+
+
+@js.program
+class MySecondProgram:
+    js.bom.console.log(MyProgram.color_list)
+
+
+print(MySecondProgram)
+print(MySecondProgram.unparse())
+
+with open(f"{MyProgram.name}.mjs", "w") as file:
+    file.write(MyProgram.unparse())
+
+with open(f"{MySecondProgram.name}.mjs", "w") as file:
+    file.write(MySecondProgram.unparse())

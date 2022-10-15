@@ -5,7 +5,7 @@ from vaste.js.macro.macro import JsMacro
 import inspect
 
 
-def map_py2js(module, path = []):
+def macro_map(module, path = []):
     return {
         **{
             (*path, k): getattr(module, k)
@@ -18,7 +18,7 @@ def map_py2js(module, path = []):
             if inspect.ismodule(getattr(module, k))
             if k not in path
             if len(path) == 0 or "vaste" in module.__package__.split(".")
-            for mk, mv in map_py2js(getattr(module, k), [*path, k]).items()
+            for mk, mv in macro_map(getattr(module, k), [*path, k]).items()
         },
     }
 
@@ -26,7 +26,7 @@ def map_py2js(module, path = []):
 class MacroExpansionTransformer(DefaultTransformer):
 
     def __init__(self, cls):
-        self.macro_map = map_py2js(inspect.getmodule(cls))
+        self.macro_map = macro_map(inspect.getmodule(cls))
 
     def transform(self, py_ast):
         for path, macro in self.macro_map.items():

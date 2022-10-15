@@ -9,3 +9,4 @@ dist
 *.js
 *.css
 *.scss
+*.mjs
