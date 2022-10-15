@@ -19,7 +19,7 @@ class VNode:
     def ast(self):
         return js.ast.CallExpression(
             callee=js.ast.MemberExpression(
-                object=js.ast.Identifier("Vue"),
+                object=js.ast.Identifier("vue"),
                 property=js.ast.Identifier("h"),
             ),
             arguments=[

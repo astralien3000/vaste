@@ -3,44 +3,48 @@ import inspect
 
 from vaste import js
 from vaste.vue.transformer.methods import MethodsTransformer
+from vaste.vue.transformer.data import DataTransformer
 
 
 class VueComponent:
     def __init__(self, name, ast):
         self.name = name
         self.ast = ast
-    
+
+    def unparse(self):
+        return js.ast.unparse(self.ast)
+
     def __repr__(self):
         return f"""VueComponent(name={self.name}, ast={self.ast})"""
 
 
-class DataProxy:
+# class DataProxy:
 
-    def __init__(self):
-        object.__setattr__(self, "data", {})
+#     def __init__(self):
+#         object.__setattr__(self, "data", {})
 
-    def __setattr__(self, k, v):
-        self.data[k] = v
+#     def __setattr__(self, k, v):
+#         self.data[k] = v
     
-    @property
-    def vue_data_ast(self):
-        return js.ast.Property(
-            key=js.ast.Identifier("data"),
-            value=js.ast.FunctionExpression(
-                js.ast.BlockStatement([
-                    js.ast.ReturnStatement(
-                        js.ast.ObjectExpression([
-                            js.ast.Property(
-                                key=js.ast.Identifier(k),
-                                value=js.ast.Literal(v),
-                            )
-                            for k, v in self.data.items()
-                        ]),
-                    ),
-                ]),
-            ),
-            method=True,
-        )
+#     @property
+#     def vue_data_ast(self):
+#         return js.ast.Property(
+#             key=js.ast.Identifier("data"),
+#             value=js.ast.FunctionExpression(
+#                 js.ast.BlockStatement([
+#                     js.ast.ReturnStatement(
+#                         js.ast.ObjectExpression([
+#                             js.ast.Property(
+#                                 key=js.ast.Identifier(k),
+#                                 value=js.ast.Literal(v),
+#                             )
+#                             for k, v in self.data.items()
+#                         ]),
+#                     ),
+#                 ]),
+#             ),
+#             method=True,
+#         )
 
 
 class RenderProxy:
@@ -80,9 +84,13 @@ class RenderProxy:
 
 
 def component(cls):
-    dp = DataProxy()
-    cls.data(dp)
-    data_js_ast = dp.vue_data_ast
+    # dp = DataProxy()
+    # cls.data(dp)
+    # data_js_ast = dp.vue_data_ast
+
+    data_source = "if True:\n" + inspect.getsource(cls.data)
+    data_py_ast = ast.parse(data_source)
+    data_js_ast = DataTransformer().transform(data_py_ast)
 
     rp = RenderProxy()
     render_res = cls.render(rp)

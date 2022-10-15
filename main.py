@@ -35,6 +35,7 @@ class MyComponent:
                         Class="navbar-brand",
                         href="#",
                         children=[
+                            "Vaste Test"
                             # js.bom.document.baseURI
                         ],
                     ),
@@ -69,5 +70,8 @@ class MyComponent:
             ),
         ])
 
+
+print(MyComponent)
+print(MyComponent.unparse())
 
 app = VasteApp(MyComponent)

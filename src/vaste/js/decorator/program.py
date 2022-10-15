@@ -16,7 +16,7 @@ class JsProgram:
 
     def unparse(self):
         return js.ast.unparse(self.ast)
-    
+
     def __repr__(self):
         return f"""JsProgram(name="{self.name}", ast={
             self.ast
