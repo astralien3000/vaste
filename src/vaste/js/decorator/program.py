@@ -63,7 +63,7 @@ def program(cls):
     )
 
 
-# def fprogram(unquote):
+# def fprogram(inject_ast):
 #     def decorator(cls):
 #         print(map_py2js(inspect.getmodule(cls)))
 #         cls_source = inspect.getsource(cls)
@@ -80,10 +80,10 @@ def program(cls):
 #                     [],
 #                     [],
 #                     body,
-#                     [ast.Call(_, [ast.Name(unquote_name)])],
+#                     [ast.Call(_, [ast.Name(inject_ast_name)])],
 #                 )
 #             ]):
-#                 cls_js_ast = MacroTransformer(unquote, unquote_name).transform(ast.Module(body))
+#                 cls_js_ast = MacroTransformer(inject_ast, inject_ast_name).transform(ast.Module(body))
 #                 return JsProgram(name, cls_js_ast)
 #             case ast.Module([
 #                 ast.If(
@@ -93,11 +93,11 @@ def program(cls):
 #                         [],
 #                         [],
 #                         body,
-#                         [ast.Call(_, [ast.Name(unquote_name)])]
+#                         [ast.Call(_, [ast.Name(inject_ast_name)])]
 #                     )]
 #                 )
 #             ]):
-#                 cls_js_ast = MacroTransformer(unquote, unquote_name).transform(ast.Module(body))
+#                 cls_js_ast = MacroTransformer(inject_ast, inject_ast_name).transform(ast.Module(body))
 #                 return JsProgram(name, cls_js_ast)
 #         raise Exception(
 #             f"Unable to generate JsProgram from {ast.dump(cls_py_ast)}"

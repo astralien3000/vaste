@@ -3,7 +3,7 @@ from .macro import *
 from collections import deque
 
 
-class UnquoteJsMacro(JsMacro):
+class InjectAstJsMacro(JsMacro):
     def __init__(self):
         self.data = deque()
 
@@ -23,4 +23,4 @@ class UnquoteJsMacro(JsMacro):
         return self.pop()
 
     def __repr__(self):
-        return "UnquoteJsMacro()"
+        return "InjectAstJsMacro()"

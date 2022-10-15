@@ -17,8 +17,8 @@ class MacroTransformer(DefaultTransformer):
         #     case ast.Attribute(value, attribute):
         #         print(value, attribute)
         #         pass
-        #     # case ast.Call(ast.Name(self.unquote_name)):
-        #     #     return self.unquote.pop()
+        #     # case ast.Call(ast.Name(self.inject_ast_name)):
+        #     #     return self.inject_ast.pop()
         #     # case ast.Assign(
         #     #     [ast.Name(spec_name)],
         #     #     ast.Call(

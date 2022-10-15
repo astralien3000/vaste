@@ -54,7 +54,7 @@ class VasteApp(fastapi.FastAPI):
             Vue = js.lang.import_from("vue")
 
             Vue.createApp(
-                js.lang.unquote(self.component.ast)
+                js.lang.inject_ast(self.component.ast)
             ).mount("#app")
         
         print(MainProgram)
