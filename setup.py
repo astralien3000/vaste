@@ -9,4 +9,7 @@ setup(
     author_email="astralien3000@yahoo.fr",
     package_dir={"": "src"},
     packages=find_packages("src"),
+    install_requires=[
+        "fastapi",
+    ],
 )
