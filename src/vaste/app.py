@@ -1,5 +1,4 @@
 import fastapi
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from vaste import js
@@ -7,6 +6,15 @@ from vaste import js
 from vaste import html
 
 import os
+
+from vaste.js.macro.program import ProgramJsMacro
+
+class ExtPrgJsMacro(ProgramJsMacro):
+    @property
+    def filename(self):
+        return self.name
+
+vue = ExtPrgJsMacro("vue", None, [])
 
 
 class VasteApp(fastapi.FastAPI):
@@ -51,8 +59,6 @@ class VasteApp(fastapi.FastAPI):
 
         @js.program
         class MainProgram:
-            vue = js.lang.import_from("vue")
-
             vue.createApp(
                 js.lang.inject_ast(self.component.ast)
             ).mount("#app")
