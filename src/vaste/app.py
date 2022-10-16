@@ -23,6 +23,11 @@ class VasteApp(fastapi.FastAPI):
         super().__init__()
         self.component = component
 
+        os.system("npm install vite")
+        os.system("npm install vue")
+        os.system("npm install sass")
+        os.system("npm install bootstrap")
+
         with open("index.html", "w") as f:
             f.write(str(self.index))
 
