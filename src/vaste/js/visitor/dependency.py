@@ -26,7 +26,7 @@ class DependencyVisitor(ast.NodeVisitor):
 
     def __init__(self, cls):
         self.dependency_map = dependency_map(inspect.getmodule(cls))
-        self.cache = []
+        self.cache = set()
 
     def visit(self, py_ast):
         ast.NodeVisitor.visit(self, py_ast)
@@ -36,4 +36,4 @@ class DependencyVisitor(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, py_ast)
         for path, macro in self.dependency_map.items():
             if type(macro).match(macro, path, py_ast):
-                self.cache.append(macro)
+                self.cache.add(macro)

@@ -22,10 +22,28 @@ class ProgramTransformer(MacroExpansionTransformer):
             case ast.Assign([target], value):
                 return js.ast.ExportNamedDeclaration(
                     declarations=[
-                        js.ast.VariableDeclarator(
-                            id=self.transform(target),
-                            init=self.transform(value),
-                        )
+                        js.ast.VariableDeclaration([
+                            js.ast.VariableDeclarator(
+                                id=self.transform(target),
+                                init=self.transform(value),
+                            ),
+                        ]),
+                    ],
+                )
+            case ast.FunctionDef(name, ast.arguments([], [*args]), body, []):
+                return js.ast.ExportNamedDeclaration(
+                    declarations=[
+                        js.ast.FunctionDeclaration(
+                            id=js.ast.Identifier(name),
+                            params=[
+                                self.transform(arg)
+                                for arg in args
+                            ],
+                            body=js.ast.BlockStatement([
+                                self.transform(stmt)
+                                for stmt in body
+                            ]),
+                        ),
                     ],
                 )
         return self.transform(stmt)

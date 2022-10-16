@@ -1,22 +1,28 @@
 from vaste import js
 
-a = "python variable"
 
 @js.program
-class MyProgram:
-    # js.bom.alert("Hello, Alert !")
+class Program1:
     js.bom.console.log("Hello, Console !")
-    js.lang.inject_ast(js.ast.Literal(a))
 
+
+@js.program
+class Program2:
     def add(a, b):
         return a + b
 
+
+@js.program
+class Program3:
     color_list = [
         "red",
         "green",
         "blue",
     ]
 
+
+@js.program
+class Program4:
     test_dict = {
         "a": 5.0,
         "b": 3,
@@ -25,23 +31,15 @@ class MyProgram:
         "e": {"f":None},
     }
 
-    res = add(5, 2)
-
-
-print(MyProgram)
-print(MyProgram.unparse())
+    res = Program2.add(5, 2)
 
 
 @js.program
-class MySecondProgram:
-    js.bom.console.log(MyProgram.color_list)
+class MainProgram:
+    Program1
+    js.bom.console.log(Program3.color_list)
+    js.bom.console.log(Program4.test_dict)
+    js.bom.console.log(Program4.res)
 
 
-print(MySecondProgram)
-print(MySecondProgram.unparse())
-
-with open(f"{MyProgram.name}.mjs", "w") as file:
-    file.write(MyProgram.unparse())
-
-with open(f"{MySecondProgram.name}.mjs", "w") as file:
-    file.write(MySecondProgram.unparse())
+MainProgram.exec()

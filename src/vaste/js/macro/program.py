@@ -1,19 +1,39 @@
 from .macro import *
 from vaste import js
+import os
 
 
 class ProgramJsMacro(JsMacro):
 
-    def __init__(self, name, ast):
+    def __init__(self, name, ast, dependencies = []):
         self.name = name
         self.ast = ast
+        self.dependencies = dependencies
 
     def unparse(self):
-        return js.ast.unparse(self.ast)
+        return js.ast.unparse(
+            js.ast.Program([
+                *[
+                    dep.gen_import_ast()
+                    for dep in self.dependencies
+                ],
+                *self.ast.body,
+            ])
+        )
 
     @property
     def filename(self):
         return f"./{self.name}.mjs"
+    
+    def save(self):
+        for dep in self.dependencies:
+            dep.save()
+        with open(self.filename, "w") as file:
+            file.write(self.unparse())
+
+    def exec(self):
+        self.save()
+        os.system(f"node {self.filename}")
 
     def gen_import_ast(self):
         return js.ast.ImportDeclaration(
@@ -26,8 +46,11 @@ class ProgramJsMacro(JsMacro):
         )
 
     def __getattribute__(self, k):
-        if k in ["name", "ast", *dir(ProgramJsMacro)]:
+        if k in ["name", "ast", "dependencies", *dir(ProgramJsMacro)]:
             return object.__getattribute__(self, k)
+        return self
+
+    def __call__(self, *args):
         return self
 
     def __repr__(self):

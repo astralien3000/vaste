@@ -25,14 +25,8 @@ class VariableDeclaration:
         self.declarations = declarations
         self.kind = kind
 
-
-class ExportNamedDeclaration:
-    def __init__(self, declarations: list, kind: str = "let"):
-        self.declarations = declarations
-        self.kind = kind
-
     def unparse(self):
-        return f"""export {self.kind} {
+        return f"""{self.kind} {
             ",".join([
                 vdecl.unparse()
                 for vdecl in self.declarations
@@ -44,6 +38,26 @@ class ExportNamedDeclaration:
             ", ".join([
                 f"declarations={self.declarations}",
                 f"kind={self.kind}",
+            ])
+        })"""
+
+
+class ExportNamedDeclaration:
+    def __init__(self, declarations: list):
+        self.declarations = declarations
+
+    def unparse(self):
+        return f"""export {
+            ",".join([
+                vdecl.unparse()
+                for vdecl in self.declarations
+            ])
+        };"""
+
+    def __repr__(self):
+        return f"""ExportNamedDeclaration({
+            ", ".join([
+                f"declarations={self.declarations}",
             ])
         })"""
 

@@ -22,25 +22,11 @@ def program(cls):
         case ast.Module([ast.ClassDef(name, [], [], body)]):
             cls_js_ast = tansformer.transform(ast.Module(body))
             dep_list = visitor.visit(ast.Module(body))
-            cls_js_ast.body = [
-                *[
-                    dep.gen_import_ast()
-                    for dep in dep_list
-                ],
-                *cls_js_ast.body
-            ]
-            return ProgramJsMacro(name, cls_js_ast)
+            return ProgramJsMacro(name, cls_js_ast, dep_list)
         case ast.Module([ast.If(ast.Constant(True), [ast.ClassDef(name, [], [], body)])]):
             cls_js_ast = tansformer.transform(ast.Module(body))
             dep_list = visitor.visit(ast.Module(body))
-            cls_js_ast.body = [
-                *[
-                    dep.gen_import_ast()
-                    for dep in dep_list
-                ],
-                *cls_js_ast.body
-            ]
-            return ProgramJsMacro(name, cls_js_ast)
+            return ProgramJsMacro(name, cls_js_ast, dep_list)
     raise Exception(
         f"Unable to generate ProgramJsMacro from {ast.dump(cls_py_ast)}"
     )
