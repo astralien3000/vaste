@@ -5,16 +5,16 @@ from vaste import js
 
 from vaste import html
 
+from vaste.npm.lib import node_module
+
 import os
 
-from vaste.js.macro.program import ProgramJsMacro
 
-class ExtPrgJsMacro(ProgramJsMacro):
-    @property
-    def filename(self):
-        return self.name
+vue = node_module.get("vue")
+vite = node_module.get("vite")
 
-vue = ExtPrgJsMacro("vue", None, [])
+element = node_module.get("element-plus")
+element_style = node_module.get_file("element-plus/dist/index.css")
 
 
 class VasteApp(fastapi.FastAPI):
@@ -23,19 +23,11 @@ class VasteApp(fastapi.FastAPI):
         super().__init__()
         self.component = component
 
-        os.system("npm install vite")
-        os.system("npm install vue")
-        os.system("npm install sass")
-        os.system("npm install bootstrap")
-
         with open("index.html", "w") as f:
             f.write(str(self.index))
 
         with open("main.js", "w") as f:
             f.write(js.ast.unparse(self.ast))
-
-        with open("main.scss", "w") as f:
-            f.write("""@import "bootstrap/scss/bootstrap";""")
 
         os.system("node node_modules/vite/bin/vite.js build")
 
@@ -45,17 +37,13 @@ class VasteApp(fastapi.FastAPI):
     def index(self):
         return  html.html([
             html.head([
-                html.link(
-                    rel="stylesheet",
-                    href="main.scss",
+                html.script(
+                    src="main.js",
+                    type="module",
                 ),
             ]),
             html.body([
                 html.div(id="app"),
-                html.script(
-                    src="main.js",
-                    type="module",
-                )
             ])
         ])
 
@@ -64,6 +52,9 @@ class VasteApp(fastapi.FastAPI):
 
         @js.program
         class MainProgram:
+            element
+            element_style
+
             vue.createApp(
                 js.lang.inject_ast(self.component.ast)
             ).mount("#app")

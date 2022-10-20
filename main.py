@@ -7,6 +7,12 @@ from vaste import (
 from vaste.vue.lib.html import *
 from vaste.vue.lib.svg import *
 
+from vaste.npm.lib import node_module
+
+
+element = node_module.get("element-plus")
+vue = node_module.get("vue")
+
 
 @component
 class MyComponent:
@@ -28,32 +34,19 @@ class MyComponent:
 
     def render(self):
         return div([
-            nav(
-                Class="navbar navbar-primary bg-primary",
-                children=[
-                    a(
-                        Class="navbar-brand",
-                        href="#",
-                        children=[
-                            "Vaste Test"
-                            # js.bom.document.baseURI
-                        ],
-                    ),
-                ],
-            ),
             div(
                 children=[
-                    button(
-                        children=[
+                    vue.h(
+                        element.ElButton,
+                        {"onClick": self.inc},
+                        [
                             "My ", self.lool," count : ", self.count,
                         ],
-                        onClick=self.inc,
-                        Class="btn btn-primary",
                     ),
-                    button(
-                        children=["RESET"],
-                        onClick=self.reset,
-                        Class="btn btn-danger",
+                    vue.h(
+                        element.ElButton,
+                        {"onClick": self.reset},
+                        ["RESET"],
                     ),
                     svg(
                         children=[
