@@ -11,7 +11,10 @@ import os
 
 
 vue = node_module.get("vue")
+vuerouter = node_module.get("vue-router")
 vite = node_module.get("vite")
+vitessg = node_module.get("vite-ssg")
+vitessgsinglepage = node_module.get_file("vite-ssg/single-page")
 
 
 class VasteApp(fastapi.FastAPI):
@@ -25,7 +28,7 @@ class VasteApp(fastapi.FastAPI):
 
         self.ast.save()
 
-        os.system("node node_modules/vite/bin/vite.js build")
+        os.system("node node_modules/vite-ssg/bin/vite-ssg.js build")
 
         self.mount("", StaticFiles(directory="dist", html=True))
 
@@ -49,9 +52,9 @@ class VasteApp(fastapi.FastAPI):
 
         @js.program
         class MainProgram:
-            vue.createApp(
+            createApp = vitessgsinglepage.ViteSSG(
                 component
-            ).mount("#app")
+            )
 
         # print(MainProgram)
         # print(MainProgram.unparse())
