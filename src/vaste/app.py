@@ -13,9 +13,6 @@ import os
 vue = node_module.get("vue")
 vite = node_module.get("vite")
 
-element = node_module.get("element-plus")
-element_style = node_module.get_file("element-plus/dist/index.css")
-
 
 class VasteApp(fastapi.FastAPI):
 
@@ -26,8 +23,7 @@ class VasteApp(fastapi.FastAPI):
         with open("index.html", "w") as f:
             f.write(str(self.index))
 
-        with open("main.js", "w") as f:
-            f.write(js.ast.unparse(self.ast))
+        self.ast.save()
 
         os.system("node node_modules/vite/bin/vite.js build")
 
@@ -49,17 +45,15 @@ class VasteApp(fastapi.FastAPI):
 
     @property
     def ast(self):
+        component = self.component
 
         @js.program
         class MainProgram:
-            element
-            element_style
-
             vue.createApp(
-                js.lang.inject_ast(self.component.ast)
+                component
             ).mount("#app")
 
-        print(MainProgram)
-        print(MainProgram.unparse())
+        # print(MainProgram)
+        # print(MainProgram.unparse())
 
         return MainProgram

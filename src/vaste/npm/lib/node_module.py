@@ -4,7 +4,7 @@ import os
 from vaste.npm.macro.node_module import NodeModuleJsMacro
 
 
-def get(name):
+def get(name, extra_files = []):
     if exists("package.json"):
         with open("package.json", "r") as file:
             packages_dict = json.load(file)
@@ -12,7 +12,7 @@ def get(name):
         packages_dict = {"dependencies": {}}
     if name not in packages_dict["dependencies"].keys():
         os.system(f"npm install {name}")
-    return NodeModuleJsMacro(name)
+    return NodeModuleJsMacro(name, extra_files)
 
 
 def get_file(path):

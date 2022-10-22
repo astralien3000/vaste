@@ -10,7 +10,13 @@ from vaste.vue.lib.svg import *
 from vaste.npm.lib import node_module
 
 
-element = node_module.get("element-plus")
+element = node_module.get(
+    "element-plus",
+    extra_files=[
+        "element-plus/dist/index.css"
+    ],
+)
+
 vue = node_module.get("vue")
 
 
@@ -64,7 +70,7 @@ class MyComponent:
         ])
 
 
-print(MyComponent)
-print(MyComponent.unparse())
+# print(MyComponent)
+# print(MyComponent.unparse())
 
 app = VasteApp(MyComponent)

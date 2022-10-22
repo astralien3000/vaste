@@ -1,9 +1,8 @@
-from .macro import *
 from vaste import js
-import os
+from vaste.js.macro.macro import *
 
 
-class ProgramJsMacro(JsMacro):
+class VueComponentJsMacro(JsMacro):
 
     def __init__(self, name, ast, macro_set = []):
         self.name = name
@@ -18,7 +17,7 @@ class ProgramJsMacro(JsMacro):
                     for macro in self.macro_set
                     for stmt in macro.import_list
                 ],
-                *self.ast.body,
+                js.ast.ExportDefaultDeclaration(self.ast),
             ])
         )
 
@@ -32,25 +31,8 @@ class ProgramJsMacro(JsMacro):
         with open(self.filename, "w") as file:
             file.write(self.unparse())
 
-    def exec(self):
-        self.save()
-        os.system(f"node {self.filename}")
-
-    @property
-    def import_list(self):
-        return [
-            js.ast.ImportDeclaration(
-                specifiers=[
-                    js.ast.ImportNamespaceSpecifier(
-                        js.ast.Identifier(self.name)
-                    ),
-                ],
-                source=js.ast.Literal(self.filename),
-            ),
-        ]
-
     def __repr__(self):
-        return f"""ProgramJsMacro(name="{self.name}", ast={self.ast})"""
+        return f"""VueComponent(name={self.name}, ast={self.ast})"""
 
     def match(self, path, py_ast):
         return ast.dump(py_ast) == ast.dump(path2ast(path))
@@ -59,3 +41,14 @@ class ProgramJsMacro(JsMacro):
 
         def transform(self, _):
             return js.ast.Identifier(self.macro.name)
+
+    @property
+    def import_list(self):
+        return [
+            js.ast.ImportDeclaration(
+                specifiers=[
+                    js.ast.Identifier(self.name),
+                ],
+                source=js.ast.Literal(self.filename),
+            ),
+        ]

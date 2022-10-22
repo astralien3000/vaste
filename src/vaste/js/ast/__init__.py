@@ -62,6 +62,23 @@ class ExportNamedDeclaration:
         })"""
 
 
+class ExportDefaultDeclaration:
+    def __init__(self, declaration):
+        self.declaration = declaration
+
+    def unparse(self):
+        return f"""export default {
+            self.declaration.unparse()
+        };"""
+
+    def __repr__(self):
+        return f"""ExportNamedDeclaration({
+            ", ".join([
+                f"declaration={self.declaration}",
+            ])
+        })"""
+
+
 class VariableDeclarator:
     def __init__(self, id, init):
         self.id = id
@@ -360,6 +377,10 @@ class ImportDeclaration:
         self.source = source
 
     def unparse(self):
+        if len(self.specifiers) == 0:
+            return f"""import {
+                self.source.unparse()
+            };"""
         return f"""import {
             ",".join([
                 spec.unparse()

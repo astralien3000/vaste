@@ -9,10 +9,11 @@ from vaste.js.macro.program import ProgramJsMacro
 
 
 def program(cls):
-    cls_source = inspect.getsource(cls)
-    tansformer = ProgramTransformer(cls)
-    visitor = FindMacroVisitor(cls)
+    frame = inspect.currentframe().f_back
+    tansformer = ProgramTransformer(frame)
+    visitor = FindMacroVisitor(frame)
 
+    cls_source = inspect.getsource(cls)
     try:
         cls_py_ast = ast.parse(cls_source)
     except IndentationError:
