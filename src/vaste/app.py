@@ -34,7 +34,7 @@ class VasteApp(fastapi.FastAPI):
         return  html.html([
             html.head([
                 html.script(
-                    src="main.js",
+                    src=self.ast.filename,
                     type="module",
                 ),
             ]),

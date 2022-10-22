@@ -21,6 +21,31 @@ vue = node_module.get("vue")
 
 
 @component
+class MyNav:
+
+    def data(self):
+        self.title = "TITLE"
+    
+    class methods:
+        
+        def dummy(self):
+            self.title
+
+    def render(self):
+        return vue.h(
+            element.ElMenu,
+            {},
+            [
+                vue.h(
+                    element.ElMenuItem,
+                    {},
+                    [self.title]
+                )
+            ],
+        )
+
+
+@component
 class MyComponent:
 
     def data(self):
@@ -40,6 +65,11 @@ class MyComponent:
 
     def render(self):
         return div([
+            vue.h(
+                MyNav,
+                {},
+                [],
+            ),
             div(
                 children=[
                     vue.h(
