@@ -10,7 +10,7 @@ def path2ast(path):
 
 
 class JsMacro:
-    
+
     class Transformer:
         
         def __init__(self, macro, parent, path):
@@ -27,3 +27,7 @@ class JsMacro:
             parent=parent,
             path=path,
         )
+
+    @property
+    def import_list(self):
+        return []

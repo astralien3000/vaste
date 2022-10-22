@@ -5,17 +5,18 @@ import os
 
 class ProgramJsMacro(JsMacro):
 
-    def __init__(self, name, ast, dependencies = []):
+    def __init__(self, name, ast, macro_set = []):
         self.name = name
         self.ast = ast
-        self.dependencies = dependencies
+        self.macro_set = macro_set
 
     def unparse(self):
         return js.ast.unparse(
             js.ast.Program([
                 *[
-                    dep.gen_import_ast()
-                    for dep in self.dependencies
+                    stmt
+                    for macro in self.macro_set
+                    for stmt in (macro.import_list, print(macro))[0]
                 ],
                 *self.ast.body,
             ])
@@ -26,8 +27,8 @@ class ProgramJsMacro(JsMacro):
         return f"./{self.name}.mjs"
     
     def save(self):
-        for dep in self.dependencies:
-            dep.save()
+        for macro in self.macro_set:
+            macro.save()
         with open(self.filename, "w") as file:
             file.write(self.unparse())
 
@@ -35,18 +36,21 @@ class ProgramJsMacro(JsMacro):
         self.save()
         os.system(f"node {self.filename}")
 
-    def gen_import_ast(self):
-        return js.ast.ImportDeclaration(
-            specifiers=[
-                js.ast.ImportNamespaceSpecifier(
-                    js.ast.Identifier(self.name)
-                ),
-            ],
-            source=js.ast.Literal(self.filename),
-        )
+    @property
+    def import_list(self):
+        return [
+            js.ast.ImportDeclaration(
+                specifiers=[
+                    js.ast.ImportNamespaceSpecifier(
+                        js.ast.Identifier(self.name)
+                    ),
+                ],
+                source=js.ast.Literal(self.filename),
+            ),
+        ]
 
     def __getattribute__(self, k):
-        if k in ["name", "ast", "dependencies", *dir(ProgramJsMacro)]:
+        if k in ["name", "ast", "macro_set", *dir(ProgramJsMacro)]:
             return object.__getattribute__(self, k)
         return self
 

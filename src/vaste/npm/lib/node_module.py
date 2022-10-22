@@ -10,7 +10,7 @@ def get(name):
             packages_dict = json.load(file)
     else:
         packages_dict = {"dependencies": {}}
-    if name not in packages_dict.keys():
+    if name not in packages_dict["dependencies"].keys():
         os.system(f"npm install {name}")
     return NodeModuleJsMacro(name)
 

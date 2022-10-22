@@ -21,6 +21,8 @@ class ObjectJsMacro(JsMacro):
         })"""
 
     def __getattribute__(self, k):
+        if k in ["name", *dir(ObjectJsMacro)]:
+            return object.__getattribute__(self, k)
         return self
 
     def __call__(self, *args):
