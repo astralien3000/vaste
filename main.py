@@ -18,6 +18,7 @@ element = node_module.get(
 )
 
 vue = node_module.get("vue")
+vuerouter = node_module.get("vue-router")
 
 
 @component
@@ -34,13 +35,26 @@ class MyNav:
     def render(self):
         return vue.h(
             element.ElMenu,
-            {},
+            { "mode": "horizontal" },
             [
                 vue.h(
-                    element.ElMenuItem,
-                    {},
-                    [self.title]
-                )
+                    vuerouter.RouterLink,
+                    { "to": "/" },
+                    [vue.h(
+                        element.ElMenuItem,
+                        {},
+                        [self.title]
+                    )],
+                ),
+                vue.h(
+                    vuerouter.RouterLink,
+                    { "to": "/miew" },
+                    [vue.h(
+                        element.ElMenuItem,
+                        {},
+                        ["MIEW"]
+                    )],
+                ),
             ],
         )
 
@@ -103,4 +117,8 @@ class MyComponent:
 # print(MyComponent)
 # print(MyComponent.unparse())
 
-app = VasteApp(MyComponent)
+app = VasteApp()
+
+app.add_component_route("/miew", MyComponent)
+
+app.add_component_route("/", MyNav)

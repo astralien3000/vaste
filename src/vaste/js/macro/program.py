@@ -1,9 +1,9 @@
-from .macro import *
+from .object import *
 from vaste import js
 import os
 
 
-class ProgramJsMacro(JsMacro):
+class ProgramJsMacro(ObjectJsMacro):
 
     def __init__(self, name, ast, macro_set = []):
         self.name = name
@@ -27,6 +27,7 @@ class ProgramJsMacro(JsMacro):
         return f"./{self.name}.mjs"
     
     def save(self):
+        print("SAVE PROGRAM", self)
         for macro in self.macro_set:
             macro.save()
         with open(self.filename, "w") as file:
@@ -51,11 +52,3 @@ class ProgramJsMacro(JsMacro):
 
     def __repr__(self):
         return f"""ProgramJsMacro(name="{self.name}", ast={self.ast})"""
-
-    def match(self, path, py_ast):
-        return ast.dump(py_ast) == ast.dump(path2ast(path))
-
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, _):
-            return js.ast.Identifier(self.macro.name)

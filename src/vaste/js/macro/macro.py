@@ -11,14 +11,14 @@ def path2ast(path):
 
 class JsMacro:
 
-    def __getattribute__(self, k):
-        try:
-            return object.__getattribute__(self, k)
-        except AttributeError:
-            return self
-
     def __call__(self, *_):
         return self
+    
+    def save(self):
+        pass
+
+    def match(self, path, py_ast):
+        return ast.dump(py_ast) == ast.dump(path2ast(path))
 
     class Transformer:
         
