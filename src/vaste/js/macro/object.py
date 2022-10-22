@@ -13,17 +13,9 @@ class ObjectJsMacro(JsMacro):
     class Transformer(JsMacro.Transformer):
 
         def transform(self, _):
-            return js.ast.Identifier(object.__getattribute__(self.macro, "name"))
+            return js.ast.Identifier(self.macro.name)
 
     def __repr__(self):
         return f"""ObjectJsMacro(name={
-            repr(object.__getattribute__(self, "name"))
+            repr(self.name)
         })"""
-
-    def __getattribute__(self, k):
-        if k in ["name", *dir(ObjectJsMacro)]:
-            return object.__getattribute__(self, k)
-        return self
-
-    def __call__(self, *args):
-        return self

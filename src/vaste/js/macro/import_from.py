@@ -4,17 +4,6 @@ from vaste import js
 
 class ImportFromJsMacro(JsMacro):
 
-    class Helper:
-
-        def __getattribute__(self, k):
-            return self
-
-        def __call__(self, *args):
-            return self
-
-    def __call__(self, arg):
-        return self.Helper()
-
     def match(self, path, py_ast):
         match py_ast:
             case ast.Assign(_, ast.Call(func, _)):

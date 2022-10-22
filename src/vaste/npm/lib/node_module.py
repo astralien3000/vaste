@@ -5,8 +5,8 @@ from vaste.npm.macro.node_module import NodeModuleJsMacro
 
 
 def get(name):
-    if exists("packages.json"):
-        with open("packages.json", "r") as file:
+    if exists("package.json"):
+        with open("package.json", "r") as file:
             packages_dict = json.load(file)
     else:
         packages_dict = {"dependencies": {}}

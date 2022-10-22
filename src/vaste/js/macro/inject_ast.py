@@ -9,6 +9,7 @@ class InjectAstJsMacro(JsMacro):
 
     def __call__(self, arg):
         self.data.append(arg)
+        return self
     
     def pop(self):
         return self.data.popleft()

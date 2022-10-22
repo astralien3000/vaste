@@ -49,14 +49,6 @@ class ProgramJsMacro(JsMacro):
             ),
         ]
 
-    def __getattribute__(self, k):
-        if k in ["name", "ast", "macro_set", *dir(ProgramJsMacro)]:
-            return object.__getattribute__(self, k)
-        return self
-
-    def __call__(self, *args):
-        return self
-
     def __repr__(self):
         return f"""ProgramJsMacro(name="{self.name}", ast={self.ast})"""
 
