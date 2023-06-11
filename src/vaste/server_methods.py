@@ -46,7 +46,22 @@ class ServerMethodsTransformer(DefaultTransformer):
                                     ),
                                     arguments=[
                                         js.ast.Literal("GET"),
-                                        js.ast.Literal(f"api/{name}?self={{}}"),
+                                        js.ast.BinaryExpression(
+                                            left=js.ast.Literal(f"api/{name}?self="),
+                                            operator="+",
+                                            right=js.ast.CallExpression(
+                                                callee=js.ast.MemberExpression(
+                                                    object=js.ast.Identifier("JSON"),
+                                                    property=js.ast.Identifier("stringify"),
+                                                ),
+                                                arguments=[
+                                                    js.ast.MemberExpression(
+                                                        object=js.ast.Identifier("this"),
+                                                        property=js.ast.Identifier("$data"),
+                                                    ),
+                                                ],
+                                            )
+                                        ),
                                         js.ast.Literal(False),
                                     ],
                                 )
