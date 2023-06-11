@@ -5,12 +5,12 @@ class DataTransformer(DefaultTransformer):
 
     def transform(self, py_ast):
         match py_ast:
-            case ast.Module([
-                ast.If(
-                    ast.Constant(True),
-                    [ast.FunctionDef(
+            case py.ast.Module([
+                py.ast.If(
+                    py.ast.Constant(True),
+                    [py.ast.FunctionDef(
                         "data",
-                        ast.arguments([], [ast.arg("self")]),
+                        py.ast.arguments([], [py.ast.arg("self")]),
                         body,
                     )]
                 )
@@ -29,8 +29,8 @@ class DataTransformer(DefaultTransformer):
                     ),
                     method=True,
                 )
-            case ast.Assign(
-                [ast.Attribute(ast.Name("self"), key)],
+            case py.ast.Assign(
+                [py.ast.Attribute(py.ast.Name("self"), key)],
                 value
             ):
                 return js.ast.Property(

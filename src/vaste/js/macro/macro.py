@@ -1,12 +1,12 @@
-import ast
+from vaste import py
 
 
 def path2ast(path):
     match path:
         case [name]:
-            return ast.Name(name, ast.Load())
+            return py.ast.Name(name, py.ast.Load())
         case [*head, tail]:
-            return ast.Attribute(path2ast(head), tail, ast.Load())
+            return py.ast.Attribute(path2ast(head), tail, py.ast.Load())
 
 
 class JsMacro:

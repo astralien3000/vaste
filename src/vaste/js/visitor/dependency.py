@@ -1,7 +1,7 @@
-import ast
 import inspect
 
 from vaste.js.macro.program import ProgramJsMacro
+from vaste import py
 
 
 def dependency_map(module, path = []):
@@ -22,18 +22,18 @@ def dependency_map(module, path = []):
     }
 
 
-class DependencyVisitor(ast.NodeVisitor):
+class DependencyVisitor(py.ast.NodeVisitor):
 
     def __init__(self, cls):
         self.dependency_map = dependency_map(inspect.getmodule(cls))
         self.cache = set()
 
     def visit(self, py_ast):
-        ast.NodeVisitor.visit(self, py_ast)
+        py.ast.NodeVisitor.visit(self, py_ast)
         return self.cache
 
     def generic_visit(self, py_ast):
-        ast.NodeVisitor.generic_visit(self, py_ast)
+        py.ast.NodeVisitor.generic_visit(self, py_ast)
         for path, macro in self.dependency_map.items():
             if type(macro).match(macro, path, py_ast):
                 self.cache.add(macro)

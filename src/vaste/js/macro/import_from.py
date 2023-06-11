@@ -17,19 +17,19 @@ class ImportFromJsMacro(JsMacro):
 
     def match(self, path, py_ast):
         match py_ast:
-            case ast.Assign(_, ast.Call(func, _)):
-                return ast.dump(func) == ast.dump(path2ast(path))
+            case py.ast.Assign(_, py.ast.Call(func, _)):
+                return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
     class Transformer(JsMacro.Transformer):
 
         def transform(self, py_ast):
             match py_ast:
-                case ast.Assign(
-                    [ast.Name(spec_name)],
-                    ast.Call(
+                case py.ast.Assign(
+                    [py.ast.Name(spec_name)],
+                    py.ast.Call(
                         _,
-                        [ast.Constant(source)],
+                        [py.ast.Constant(source)],
                     ),
                 ):
                     return js.ast.ImportDeclaration(

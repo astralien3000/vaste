@@ -5,11 +5,11 @@ class ServerMethodsTransformer(DefaultTransformer):
 
     def transform(self, py_ast):
         match py_ast:
-            case ast.Module([module_cls]):
+            case py.ast.Module([module_cls]):
                 return self.transform(module_cls)
-            case ast.ClassDef("module", [], [], [methods_cls], []):
+            case py.ast.ClassDef("module", [], [], [methods_cls], []):
                 return self.transform(methods_cls)
-            case ast.ClassDef("server_methods", [], [], body, []):
+            case py.ast.ClassDef("server_methods", [], [], body, []):
                 return js.ast.Property(
                     key=js.ast.Identifier("methods"),
                     value=js.ast.ObjectExpression([
@@ -17,7 +17,7 @@ class ServerMethodsTransformer(DefaultTransformer):
                         for stmt in body
                     ]),
                 )
-            case ast.FunctionDef(name, ast.arguments([], [ast.arg("self"), *args]), body, []):
+            case py.ast.FunctionDef(name, py.ast.arguments([], [py.ast.arg("self"), *args]), body, []):
                 return js.ast.Property(
                     key=js.ast.Identifier(name),
                     value=js.ast.FunctionExpression(

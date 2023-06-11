@@ -1,11 +1,10 @@
-import ast
 import inspect
-from typing import Any
 
 import fastapi
 import json
 
 from vaste import js
+from vaste import py
 from vaste.vue.transformer.methods import MethodsTransformer
 from vaste.vue.transformer.data import DataTransformer
 from vaste.vue.transformer.render import RenderTransformer
@@ -35,19 +34,19 @@ class SelfProxy:
 
 def component(cls):
     data_source = "if True:\n" + inspect.getsource(cls.data)
-    data_py_ast = ast.parse(data_source)
+    data_py_ast = py.ast.parse(data_source)
     data_js_ast = DataTransformer().transform(data_py_ast)
 
     render_source = "if True:\n" + inspect.getsource(cls.render)
-    render_py_ast = ast.parse(render_source)
+    render_py_ast = py.ast.parse(render_source)
     render_js_ast = RenderTransformer(cls).transform(render_py_ast)
 
     methods_source = "class module:\n" + inspect.getsource(cls.methods)
-    methods_py_ast = ast.parse(methods_source)
+    methods_py_ast = py.ast.parse(methods_source)
     methods_js_ast = MethodsTransformer().transform(methods_py_ast)
 
     server_methods_source = "class module:\n" + inspect.getsource(cls.server_methods)
-    server_methods_py_ast = ast.parse(server_methods_source)
+    server_methods_py_ast = py.ast.parse(server_methods_source)
     server_methods_js_ast = ServerMethodsTransformer().transform(server_methods_py_ast)
 
     merged_methods_js_ast = js.ast.Property(

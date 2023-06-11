@@ -1,5 +1,6 @@
 from .macro import *
 from vaste import js
+from vaste import py
 
 
 class ObjectJsMacro(JsMacro):
@@ -8,7 +9,7 @@ class ObjectJsMacro(JsMacro):
         self.name = name
 
     def match(self, path, py_ast):
-        return ast.dump(py_ast) == ast.dump(path2ast(path))
+        return py.ast.dump(py_ast) == py.ast.dump(path2ast(path))
 
     class Transformer(JsMacro.Transformer):
 

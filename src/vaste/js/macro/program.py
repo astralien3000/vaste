@@ -57,7 +57,7 @@ class ProgramJsMacro(JsMacro):
         return f"""ProgramJsMacro(name="{self.name}", ast={self.ast})"""
 
     def match(self, path, py_ast):
-        return ast.dump(py_ast) == ast.dump(path2ast(path))
+        return py.ast.dump(py_ast) == py.ast.dump(path2ast(path))
 
     class Transformer(JsMacro.Transformer):
 
