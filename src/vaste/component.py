@@ -45,31 +45,32 @@ def component(cls):
     methods_py_ast = py.ast.parse(methods_source)
     methods_js_ast = MethodsTransformer().transform(methods_py_ast)
 
-    server_methods_source = "class module:\n" + inspect.getsource(cls.server_methods)
-    server_methods_py_ast = py.ast.parse(server_methods_source)
-    server_methods_js_ast = ServerMethodsTransformer().transform(server_methods_py_ast)
-
-    merged_methods_js_ast = js.ast.Property(
-        key=js.ast.Identifier("methods"),
-        method=False,
-        value=js.ast.ObjectExpression([
-            *methods_js_ast.value.properties,
-            *server_methods_js_ast.value.properties,
-        ]),
-    )
-
     api = fastapi.FastAPI()
 
-    for attr in dir(cls.server_methods):
-        if attr[0] != "_" and callable(getattr(cls.server_methods, attr)):
-            method = getattr(cls.server_methods, attr)
-            api.get(f"/{attr}")(lambda self: method(SelfProxy(json.loads(self))))
+    if hasattr(cls, "server_methods"):
+        server_methods_source = "class module:\n" + inspect.getsource(cls.server_methods)
+        server_methods_py_ast = py.ast.parse(server_methods_source)
+        server_methods_js_ast = ServerMethodsTransformer().transform(server_methods_py_ast)
+
+        methods_js_ast = js.ast.Property(
+            key=js.ast.Identifier("methods"),
+            method=False,
+            value=js.ast.ObjectExpression([
+                *methods_js_ast.value.properties,
+                *server_methods_js_ast.value.properties,
+            ]),
+        )
+
+        for attr in dir(cls.server_methods):
+            if attr[0] != "_" and callable(getattr(cls.server_methods, attr)):
+                method = getattr(cls.server_methods, attr)
+                api.get(f"/{attr}")(lambda self: method(SelfProxy(json.loads(self))))
 
     return VasteComponent(
         name=cls.__name__,
         ast=js.ast.ObjectExpression([
             data_js_ast,
-            merged_methods_js_ast,
+            methods_js_ast,
             render_js_ast,
         ]),
         api=api,
