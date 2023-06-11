@@ -41,9 +41,16 @@ def component(cls):
     render_py_ast = py.ast.parse(render_source)
     render_js_ast = RenderTransformer(cls).transform(render_py_ast)
 
-    methods_source = "class module:\n" + inspect.getsource(cls.methods)
-    methods_py_ast = py.ast.parse(methods_source)
-    methods_js_ast = MethodsTransformer().transform(methods_py_ast)
+    if hasattr(cls, "methods"):
+        methods_source = "class module:\n" + inspect.getsource(cls.methods)
+        methods_py_ast = py.ast.parse(methods_source)
+        methods_js_ast = MethodsTransformer().transform(methods_py_ast)
+    else:
+        methods_js_ast = js.ast.Property(
+            key=js.ast.Identifier("methods"),
+            method=False,
+            value=js.ast.ObjectExpression([]),
+        )
 
     api = fastapi.FastAPI()
 
@@ -64,7 +71,9 @@ def component(cls):
         for attr in dir(cls.server_methods):
             if attr[0] != "_" and callable(getattr(cls.server_methods, attr)):
                 method = getattr(cls.server_methods, attr)
-                api.get(f"/{attr}")(lambda self: method(SelfProxy(json.loads(self))))
+                api.get(f"/{attr}")((lambda method: lambda self: {
+                    "return": method(SelfProxy(json.loads(self)))
+                })(method))
 
     return VasteComponent(
         name=cls.__name__,

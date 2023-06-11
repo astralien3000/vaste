@@ -37,4 +37,8 @@ class DataTransformer(DefaultTransformer):
                     key=js.ast.Identifier(key),
                     value=self.transform(value),
                 )
+            case py.ast.Name("self"):
+                return js.ast.Identifier(
+                    name="this",
+                )
         return DefaultTransformer.transform(self, py_ast)
