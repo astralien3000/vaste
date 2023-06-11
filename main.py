@@ -1,7 +1,6 @@
 from vaste import (
     VasteApp,
     component,
-    js,
 )
 
 from vaste.vue.lib.html import *
@@ -25,6 +24,11 @@ class MyComponent:
 
         def reset(self):
             self.count = 0
+
+    class server_methods:
+
+        def test(self):
+            print(self.lool, self.count)
 
     def render(self):
         return div([
@@ -65,6 +69,11 @@ class MyComponent:
                                 onClick=self.dec,
                             )
                         ],
+                    ),
+                    button(
+                        children=["LOOL"],
+                        onClick=self.test,
+                        Class="btn btn-danger",
                     ),
                 ],
             ),

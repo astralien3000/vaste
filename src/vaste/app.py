@@ -39,7 +39,8 @@ class VasteApp(fastapi.FastAPI):
 
         os.system("node node_modules/vite/bin/vite.js build")
 
-        self.mount("", StaticFiles(directory="dist", html=True))
+        self.mount("/api", self.component.api)
+        self.mount("/", StaticFiles(directory="dist", html=True))
 
     @property
     def index(self):

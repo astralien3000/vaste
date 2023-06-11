@@ -105,6 +105,8 @@ class Literal:
                 return "null"
             case str():
                 return f'"{self.value}"'
+            case bool():
+                return "true" if self.value else "false"
         return str(self.value)
 
     def __repr__(self):
@@ -191,6 +193,26 @@ class CallExpression:
         })"""
 
 
+class NewExpression:
+    def __init__(self, callee, arguments: list):
+        self.callee = callee
+        self.arguments = arguments
+
+    def unparse(self):
+        return f"""new {self.callee.unparse()}({",".join([
+            arg.unparse()
+            for arg in self.arguments
+        ])})"""
+
+    def __repr__(self):
+        return f"""NewExpression({
+            ", ".join([
+                f"callee={self.callee}",
+                f"arguments={self.arguments}",
+            ])
+        })"""
+
+
 class MemberExpression:
     def __init__(self, object, property):
         self.object = object
@@ -200,7 +222,7 @@ class MemberExpression:
         return f"{self.object.unparse()}.{self.property.unparse()}"
 
     def __repr__(self):
-        return f"""CallExpression({
+        return f"""MemberExpression({
             ", ".join([
                 f"object={self.object}",
                 f"property={self.property}",
