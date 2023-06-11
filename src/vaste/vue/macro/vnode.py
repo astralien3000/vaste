@@ -9,15 +9,15 @@ class VNodeJsMacro(JsMacro):
 
     def match(self, path, py_ast):
         match py_ast:
-            case ast.Call(func, _, _):
-                return ast.dump(func) == ast.dump(path2ast(path))
+            case py.ast.Call(func, _, _):
+                return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
     class Transformer(JsMacro.Transformer):
 
         def transform(self, py_ast):
             match py_ast:
-                case ast.Call(
+                case py.ast.Call(
                     _,
                     [],
                     kwargs,
@@ -34,15 +34,14 @@ class VNodeJsMacro(JsMacro):
                                 for kwarg in kwargs
                                 if kwarg.arg != "children"
                             ]),
-                            js.ast.ArrayExpression([
-                                self.parent.transform(elt)
+                            *[
+                                self.parent.transform(kwarg.value)
                                 for kwarg in kwargs
                                 if kwarg.arg == "children"
-                                for elt in kwarg.value.elts
-                            ]),
+                            ],
                         ],
                     )
-                case ast.Call(
+                case py.ast.Call(
                     _,
                     [children_arg],
                     kwargs,
@@ -65,9 +64,9 @@ class VNodeJsMacro(JsMacro):
                             ]),
                         ],
                     )
-                case ast.keyword(arg, value):
+                case py.ast.keyword(arg, value):
                     return js.ast.Property(
                         key=js.ast.Identifier(arg),
                         value=self.parent.transform(value)
                     )
-            raise Exception(f"[VNodeJsMacro] Unmatched ast : {ast.dump(py_ast)}")
+            raise Exception(f"[VNodeJsMacro] Unmatched ast : {py.ast.dump(py_ast)}")

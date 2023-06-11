@@ -1,13 +1,14 @@
 from vaste import (
     VasteApp,
     component,
-    js,
 )
 
 from vaste.vue.lib.html import *
 from vaste.vue.lib.svg import *
 
 from vaste.npm.lib import node_module
+
+import os
 
 
 element = node_module.get(
@@ -58,24 +59,51 @@ class MyNav:
             ],
         )
 
+LOOL = "MIEW"
+COUNT = 0
+
 
 @component
 class MyComponent:
 
     def data(self):
-        self.count = 0
+        self.count = self.get_count()
         self.lool = "MIEW"
 
     class methods:
 
         def inc(self):
-            self.count += 10
+            self.count = self.send_inc()
 
         def dec(self):
-            self.count -= 2
+            self.count = self.send_dec()
 
         def reset(self):
-            self.count = 0
+            self.count = self.send_reset()
+
+    class server_methods:
+
+        def get_count(self):
+            global COUNT
+            return COUNT
+
+        def send_inc(self):
+            global COUNT
+            COUNT += 10
+            return COUNT
+
+        def send_dec(self):
+            global COUNT
+            COUNT -= 2
+            return COUNT
+
+        def send_reset(self):
+            global COUNT
+            COUNT = 0
+            return COUNT
+
+        def test(self):
+            return os.listdir()
 
     def render(self):
         return div([
@@ -108,6 +136,16 @@ class MyComponent:
                                 onClick=self.dec,
                             )
                         ],
+                    ),
+                    ul(
+                        children=[
+                            li(
+                                children=[path],
+                                Class="list-group-item",
+                            )
+                            for path in self.test()
+                        ],
+                        Class="list-group",
                     ),
                 ],
             ),

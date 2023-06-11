@@ -16,8 +16,8 @@ class InjectAstJsMacro(JsMacro):
 
     def match(self, path, py_ast):
         match py_ast:
-            case ast.Call(func, args):
-                return ast.dump(func) == ast.dump(path2ast(path))
+            case py.ast.Call(func, args):
+                return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
     class Transformer(JsMacro.Transformer):

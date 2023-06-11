@@ -88,6 +88,8 @@ class VasteApp(fastapi.FastAPI):
             "component": component,
         })
 
+        self.mount(f"/api", component.api)
+
         @self.get(path)
         def get_path():
             with open(f"dist/{append_html(path)}", "r") as file:

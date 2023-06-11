@@ -5,12 +5,12 @@ class RenderTransformer(MacroExpansionTransformer):
 
     def transform(self, py_ast):
         match py_ast:
-            case ast.Module([
-                ast.If(
-                    ast.Constant(True),
-                    [ast.FunctionDef(
+            case py.ast.Module([
+                py.ast.If(
+                    py.ast.Constant(True),
+                    [py.ast.FunctionDef(
                         "render",
-                        ast.arguments([], [ast.arg("self")]),
+                        py.ast.arguments([], [py.ast.arg("self")]),
                         body,
                     )]
                 )
@@ -25,7 +25,7 @@ class RenderTransformer(MacroExpansionTransformer):
                     ),
                     method=True,
                 )
-            case ast.Name("self"):
+            case py.ast.Name("self"):
                 return js.ast.Identifier(
                     name="this",
                 )

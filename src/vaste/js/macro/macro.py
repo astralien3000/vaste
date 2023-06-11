@@ -1,12 +1,12 @@
-import ast
+from vaste import py
 
 
 def path2ast(path):
     match path:
         case [name]:
-            return ast.Name(name, ast.Load())
+            return py.ast.Name(name, py.ast.Load())
         case [*head, tail]:
-            return ast.Attribute(path2ast(head), tail, ast.Load())
+            return py.ast.Attribute(path2ast(head), tail, py.ast.Load())
 
 
 class JsMacro:
@@ -18,7 +18,7 @@ class JsMacro:
         pass
 
     def match(self, path, py_ast):
-        return ast.dump(py_ast) == ast.dump(path2ast(path))
+        return py.ast.dump(py_ast) == py.ast.dump(path2ast(path))
 
     class Transformer:
         

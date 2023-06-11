@@ -1,7 +1,7 @@
-import ast
 import inspect
 
 from vaste import js
+from vaste import py
 from vaste.vue.transformer.methods import MethodsTransformer
 from vaste.vue.transformer.data import DataTransformer
 from vaste.vue.transformer.render import RenderTransformer
@@ -15,15 +15,15 @@ def component(cls):
     frame = inspect.currentframe().f_back
 
     data_source = "if True:\n" + inspect.getsource(cls.data)
-    data_py_ast = ast.parse(data_source)
+    data_py_ast = py.ast.parse(data_source)
     data_js_ast = DataTransformer().transform(data_py_ast)
 
     render_source = "if True:\n" + inspect.getsource(cls.render)
-    render_py_ast = ast.parse(render_source)
+    render_py_ast = py.ast.parse(render_source)
     render_js_ast = RenderTransformer(frame).transform(render_py_ast)
 
     methods_source = "class module:\n" + inspect.getsource(cls.methods)
-    methods_py_ast = ast.parse(methods_source)
+    methods_py_ast = py.ast.parse(methods_source)
     methods_js_ast = MethodsTransformer().transform(methods_py_ast)
 
     all_source = inspect.getsource(cls)

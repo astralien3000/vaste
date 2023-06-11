@@ -1,6 +1,6 @@
 from .macro import *
 
-import ast
+from vaste import py
 
 
 class ProgramTransformer(MacroExpansionTransformer):
@@ -10,7 +10,7 @@ class ProgramTransformer(MacroExpansionTransformer):
 
     def transform(self, py_ast):
         match py_ast:
-            case ast.Module(body):
+            case py.ast.Module(body):
                 return js.ast.Program([
                     self.transform_stmt(stmt)
                     for stmt in body
@@ -19,7 +19,7 @@ class ProgramTransformer(MacroExpansionTransformer):
 
     def transform_stmt(self, stmt):
         match stmt:
-            case ast.Assign([target], value):
+            case py.ast.Assign([target], value):
                 return js.ast.ExportNamedDeclaration(
                     declarations=[
                         js.ast.VariableDeclaration([
@@ -30,7 +30,7 @@ class ProgramTransformer(MacroExpansionTransformer):
                         ]),
                     ],
                 )
-            case ast.FunctionDef(name, ast.arguments([], [*args]), body, []):
+            case py.ast.FunctionDef(name, py.ast.arguments([], [*args]), body, []):
                 return js.ast.ExportNamedDeclaration(
                     declarations=[
                         js.ast.FunctionDeclaration(
