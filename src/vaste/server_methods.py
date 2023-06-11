@@ -78,11 +78,19 @@ class ServerMethodsTransformer(DefaultTransformer):
                                 )
                             ),
                             js.ast.ReturnStatement(
-                                js.ast.MemberExpression(
-                                    object=js.ast.Identifier("xmlHttp"),
-                                    property=js.ast.Identifier("responseText"),
-                                )
-                            )
+                                js.ast.CallExpression(
+                                    callee=js.ast.MemberExpression(
+                                        object=js.ast.Identifier("JSON"),
+                                        property=js.ast.Identifier("parse"),
+                                    ),
+                                    arguments=[
+                                        js.ast.MemberExpression(
+                                            object=js.ast.Identifier("xmlHttp"),
+                                            property=js.ast.Identifier("response"),
+                                        ),
+                                    ],
+                                ),
+                            ),
                         ])
                     ),
                     method=True,

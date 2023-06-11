@@ -80,12 +80,11 @@ class VNodeJsMacro(JsMacro):
                                 for kwarg in kwargs
                                 if kwarg.arg != "children"
                             ]),
-                            js.ast.ArrayExpression([
-                                self.parent.transform(elt)
+                            *[
+                                self.parent.transform(kwarg.value)
                                 for kwarg in kwargs
                                 if kwarg.arg == "children"
-                                for elt in kwarg.value.elts
-                            ]),
+                            ],
                         ],
                     )
                 case ast.Call(

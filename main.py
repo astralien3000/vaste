@@ -6,6 +6,8 @@ from vaste import (
 from vaste.vue.lib.html import *
 from vaste.vue.lib.svg import *
 
+import os
+
 
 @component
 class MyComponent:
@@ -28,7 +30,7 @@ class MyComponent:
     class server_methods:
 
         def test(self):
-            print(self.lool, self.count)
+            return os.listdir()
 
     def render(self):
         return div([
@@ -70,10 +72,15 @@ class MyComponent:
                             )
                         ],
                     ),
-                    button(
-                        children=["LOOL"],
-                        onClick=self.test,
-                        Class="btn btn-danger",
+                    ul(
+                        children=[
+                            li(
+                                children=[path],
+                                Class="list-group-item",
+                            )
+                            for path in self.test()
+                        ],
+                        Class="list-group",
                     ),
                 ],
             ),

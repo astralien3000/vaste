@@ -28,6 +28,12 @@ class DefaultTransformer:
                     object=self.transform(value),
                     property=js.ast.Identifier(attr),
                 )
+            case ast.Subscript(value, attr):
+                return js.ast.MemberExpression(
+                    object=self.transform(value),
+                    property=self.transform(attr),
+                    computed=True,
+                )
             case ast.Name(id):
                 return js.ast.Identifier(
                     name=id,
@@ -75,6 +81,21 @@ class DefaultTransformer:
                     self.transform(elt)
                     for elt in elts
                 ])
+            case ast.ListComp(elt, generators):
+                return js.ast.CallExpression(
+                    callee=js.ast.MemberExpression(
+                        object=self.transform(generators[-1].iter),
+                        property=js.ast.Identifier("map"),
+                    ),
+                    arguments=[
+                        js.ast.ArrowFunctionExpression(
+                            params=[
+                                self.transform(generators[-1].target)
+                            ],
+                            body=self.transform(elt),
+                        )
+                    ],
+                )
             case ast.Dict(keys, values):
                 return js.ast.ObjectExpression([
                     js.ast.Property(

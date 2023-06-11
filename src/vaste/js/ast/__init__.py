@@ -214,11 +214,14 @@ class NewExpression:
 
 
 class MemberExpression:
-    def __init__(self, object, property):
+    def __init__(self, object, property, computed: bool = False):
         self.object = object
         self.property = property
+        self.computed = computed
 
     def unparse(self):
+        if self.computed:
+            return f"{self.object.unparse()}[{self.property.unparse()}]"
         return f"{self.object.unparse()}.{self.property.unparse()}"
 
     def __repr__(self):
@@ -234,6 +237,14 @@ class ArrowFunctionExpression:
     def __init__(self, body, params: list = []):
         self.body = body
         self.params = params
+
+    def unparse(self):
+        return f"""({
+            ",".join([
+                param.unparse()
+                for param in self.params
+            ])
+        })=>{self.body.unparse()}"""
 
 
 class BinaryExpression:
