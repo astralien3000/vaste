@@ -1,29 +1,34 @@
 
 
 from types import NoneType
+from dataclasses import dataclass, field
 
 
 def unparse(ast):
     return ast.unparse()
 
 
-class Program:
-    def __init__(self, body: list = []):
-        self.body = body
+class AST:
+    """
+    Base of all AST node classes.
+    Mainly used for type hints.
+    """
+
+
+@dataclass
+class Program(AST):
+    body: list[AST] = field(default_factory=list)
 
     def unparse(self):
         return "".join([
             stmt.unparse() for stmt in self.body
         ])
 
-    def __repr__(self):
-        return f"""Program(body={self.body})"""
 
-
-class VariableDeclaration:
-    def __init__(self, declarations: list, kind: str = "let"):
-        self.declarations = declarations
-        self.kind = kind
+@dataclass
+class VariableDeclaration(AST):
+    declarations: list[AST]
+    kind: str = "let"
 
     def unparse(self):
         return f"""{self.kind} {
@@ -33,18 +38,10 @@ class VariableDeclaration:
             ])
         };"""
 
-    def __repr__(self):
-        return f"""ExportNamedDeclaration({
-            ", ".join([
-                f"declarations={self.declarations}",
-                f"kind={self.kind}",
-            ])
-        })"""
 
-
-class ExportNamedDeclaration:
-    def __init__(self, declarations: list):
-        self.declarations = declarations
+@dataclass
+class ExportNamedDeclaration(AST):
+    declarations: list[AST]
 
     def unparse(self):
         return f"""export {
@@ -54,67 +51,42 @@ class ExportNamedDeclaration:
             ])
         };"""
 
-    def __repr__(self):
-        return f"""ExportNamedDeclaration({
-            ", ".join([
-                f"declarations={self.declarations}",
-            ])
-        })"""
 
-
-class ExportDefaultDeclaration:
-    def __init__(self, declaration):
-        self.declaration = declaration
+@dataclass
+class ExportDefaultDeclaration(AST):
+    declaration: list[AST]
 
     def unparse(self):
         return f"""export default {
             self.declaration.unparse()
         };"""
 
-    def __repr__(self):
-        return f"""ExportNamedDeclaration({
-            ", ".join([
-                f"declaration={self.declaration}",
-            ])
-        })"""
 
-
-class VariableDeclarator:
-    def __init__(self, id, init):
-        self.id = id
-        self.init = init
+@dataclass
+class VariableDeclarator(AST):
+    id: AST
+    init: AST
 
     def unparse(self):
         return f"""{self.id.unparse()}={self.init.unparse()}"""
 
-    def __repr__(self):
-        return f"""VariableDeclarator({
-            ", ".join([
-                f"id={self.id}",
-                f"init={self.init}",
-            ])
-        })"""
 
-
-class Identifier:
-    def __init__(self, name: str):
-        self.name = name
+@dataclass
+class Identifier(AST):
+    name: str
 
     def unparse(self):
         return self.name
 
-    def __repr__(self):
-        return f"""Identifier(name="{self.name}")"""
+
+@dataclass
+class ArrayExpression(AST):
+    elements: list[AST]
 
 
-class ArrayExpression:
-    def __init__(self, elements: list):
-        self.elements = elements
-
-
-class Literal:
-    def __init__(self, value):
-        self.value = value
+@dataclass
+class Literal(AST):
+    value: str|bool|float|NoneType
 
     def unparse(self):
         match self.value:
@@ -126,20 +98,12 @@ class Literal:
                 return "true" if self.value else "false"
         return str(self.value)
 
-    def __repr__(self):
-        match self.value:
-            case NoneType():
-                return f"""Literal(value=null)"""
-            case str():
-                return f"""Literal(value="{self.value}")"""
-        return f"""Literal(value={self.value})"""
 
-
-class FunctionDeclaration:
-    def __init__(self, id, body, params: list = []):
-        self.id = id
-        self.body = body
-        self.params = params
+@dataclass
+class FunctionDeclaration(AST):
+    id: AST
+    body: AST
+    params: list[AST] = field(default_factory=list)
 
     def unparse(self):
         return f"""function {self.id.unparse()}({
@@ -149,19 +113,10 @@ class FunctionDeclaration:
             ])
         }){self.body.unparse()};"""
 
-    def __repr__(self):
-        return f"""FunctionDeclaration({
-            ", ".join([
-                f"id={self.id}",
-                f"body={self.body}",
-                f"params={self.params}",
-            ])
-        })"""
 
-
-class BlockStatement:
-    def __init__(self, body: list):
-        self.body = body
+@dataclass
+class BlockStatement(AST):
+    body: list[AST]
 
     def unparse(self):
         return f"""{{{
@@ -170,30 +125,19 @@ class BlockStatement:
             ])
         }}}"""
 
-    def __repr__(self):
-        return f"""BlockStatement({
-            ", ".join([
-                f"id={stmt}"
-                for stmt in self.body
-            ])
-        })"""
 
-
-class ExpressionStatement:
-    def __init__(self, expression):
-        self.expression = expression
+@dataclass
+class ExpressionStatement(AST):
+    expression: AST
 
     def unparse(self):
         return f"{self.expression.unparse()};"
 
-    def __repr__(self):
-        return f"""ExpressionStatement(expression={self.expression})"""
 
-
-class CallExpression:
-    def __init__(self, callee, arguments: list):
-        self.callee = callee
-        self.arguments = arguments
+@dataclass
+class CallExpression(AST):
+    callee: AST
+    arguments: list[AST]
 
     def unparse(self):
         return f"""{self.callee.unparse()}({",".join([
@@ -201,19 +145,11 @@ class CallExpression:
             for arg in self.arguments
         ])})"""
 
-    def __repr__(self):
-        return f"""CallExpression({
-            ", ".join([
-                f"callee={self.callee}",
-                f"arguments={self.arguments}",
-            ])
-        })"""
 
-
-class NewExpression:
-    def __init__(self, callee, arguments: list):
-        self.callee = callee
-        self.arguments = arguments
+@dataclass
+class NewExpression(AST):
+    callee: AST
+    arguments: list[AST]
 
     def unparse(self):
         return f"""new {self.callee.unparse()}({",".join([
@@ -221,39 +157,23 @@ class NewExpression:
             for arg in self.arguments
         ])})"""
 
-    def __repr__(self):
-        return f"""NewExpression({
-            ", ".join([
-                f"callee={self.callee}",
-                f"arguments={self.arguments}",
-            ])
-        })"""
 
-
-class MemberExpression:
-    def __init__(self, object, property, computed: bool = False):
-        self.object = object
-        self.property = property
-        self.computed = computed
+@dataclass
+class MemberExpression(AST):
+    object: AST
+    property: AST
+    computed: bool = False
 
     def unparse(self):
         if self.computed:
             return f"{self.object.unparse()}[{self.property.unparse()}]"
         return f"{self.object.unparse()}.{self.property.unparse()}"
 
-    def __repr__(self):
-        return f"""MemberExpression({
-            ", ".join([
-                f"object={self.object}",
-                f"property={self.property}",
-            ])
-        })"""
 
-
-class ArrowFunctionExpression:
-    def __init__(self, body, params: list = []):
-        self.body = body
-        self.params = params
+@dataclass
+class ArrowFunctionExpression(AST):
+    body: AST
+    params: list[AST] = field(default_factory=list)
 
     def unparse(self):
         return f"""({
@@ -264,58 +184,40 @@ class ArrowFunctionExpression:
         })=>{self.body.unparse()}"""
 
 
-class BinaryExpression:
-    def __init__(self, left, operator: str, right):
-        self.left = left
-        self.operator = operator
-        self.right = right
+@dataclass
+class BinaryExpression(AST):
+    left: AST
+    operator: str
+    right: AST
 
     def unparse(self):
         return f"{self.left.unparse()}{self.operator}{self.right.unparse()}"
 
-    def __repr__(self):
-        return f"""BinaryExpression({
-            ", ".join([
-                f"left={self.left}",
-                f"operator={self.operator}",
-                f"right={self.right}",
-            ])
-        })"""
 
-
-class AssignmentExpression:
-    def __init__(self, left, operator: str, right):
-        self.left = left
-        self.operator = operator
-        self.right = right
+@dataclass
+class AssignmentExpression(AST):
+    left: AST
+    operator: str
+    right: AST
 
     def unparse(self):
         return f"{self.left.unparse()}{self.operator}{self.right.unparse()}"
 
-    def __repr__(self):
-        return f"""AssignmentExpression({
-            ", ".join([
-                f"left={self.left}",
-                f"operator='{self.operator}'",
-                f"right={self.right}",
-            ])
-        })"""
+
+@dataclass
+class TemplateLiteral(AST):
+    expressions: list[AST]
+    quasis: list[AST]
 
 
-class TemplateLiteral:
-    def __init__(self, expressions: list, quasis: list):
-        self.expressions = expressions
-        self.quasis = quasis
+@dataclass
+class TemplateElement(AST):
+    value: str
 
 
-class TemplateElement:
-    def __init__(self, value: str):
-        self.value = value
-
-
-class ObjectExpression:
-    def __init__(self, properties: list = []):
-        self.properties = properties
+@dataclass
+class ObjectExpression(AST):
+    properties: list[AST] = field(default_factory=list)
 
     def unparse(self):
         return f"""{{{
@@ -325,19 +227,12 @@ class ObjectExpression:
             ])
         }}}"""
 
-    def __repr__(self):
-        return f"""ObjectExpression({
-            ", ".join([
-                f"properties={self.properties}",
-            ])
-        })"""
 
-
-class Property:
-    def __init__(self, key: str, value, method: bool = False):
-        self.key = key
-        self.value = value
-        self.method = method
+@dataclass
+class Property(AST):
+    key: str
+    value: AST
+    method: bool = False
 
     def unparse(self):
         if self.method:
@@ -345,20 +240,11 @@ class Property:
         else:
             return f"{self.key.unparse()}:{self.value.unparse()}"
 
-    def __repr__(self):
-        return f"""Property({
-            ", ".join([
-                f"key={self.key}",
-                f"value={self.value}",
-                f"method={self.method}",
-            ])
-        })"""
 
-
-class FunctionExpression:
-    def __init__(self, body, params: list = []):
-        self.body = body
-        self.params = params
+@dataclass
+class FunctionExpression(AST):
+    body: AST
+    params: list[AST] = field(default_factory=list)
 
     def unparse(self):
         return f"""({
@@ -369,24 +255,17 @@ class FunctionExpression:
         }){self.body.unparse()}"""
 
 
-class ReturnStatement:
-    def __init__(self, argument):
-        self.argument = argument
+@dataclass
+class ReturnStatement(AST):
+    argument: AST
 
     def unparse(self):
         return f"return {self.argument.unparse()};"
 
-    def __repr__(self):
-        return f"""ReturnStatement({
-            ", ".join([
-                f"argument={self.argument}",
-            ])
-        })"""
 
-
-class ArrayExpression:
-    def __init__(self, elements: list = []):
-        self.elements = elements
+@dataclass
+class ArrayExpression(AST):
+    elements: list[AST] = field(default_factory=list)
 
     def unparse(self):
         return f"""[{
@@ -396,18 +275,11 @@ class ArrayExpression:
             ])
         }]"""
 
-    def __repr__(self):
-        return f"""ArrayExpression({
-            ", ".join([
-                f"elements={self.elements}",
-            ])
-        })"""
 
-
-class ImportDeclaration:
-    def __init__(self, specifiers: list, source):
-        self.specifiers = specifiers
-        self.source = source
+@dataclass
+class ImportDeclaration(AST):
+    specifiers: list[AST]
+    source: AST
 
     def unparse(self):
         if len(self.specifiers) == 0:
@@ -423,28 +295,12 @@ class ImportDeclaration:
             self.source.unparse()
         };"""
 
-    def __repr__(self):
-        return f"""ImportDeclaration({
-            ", ".join([
-                f"specifiers={self.specifiers}",
-                f"source={self.source}",
-            ])
-        })"""
 
-
-class ImportNamespaceSpecifier:
-    def __init__(self, local):
-        self.local = local
+@dataclass
+class ImportNamespaceSpecifier(AST):
+    local: AST
 
     def unparse(self):
         return f"""* as {
             self.local.unparse()
         }"""
-
-    def __repr__(self):
-        return f"""ImportNamespaceSpecifier({
-            ", ".join([
-                f"local={self.local}",
-            ])
-        })"""
-
