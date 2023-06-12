@@ -70,17 +70,25 @@ class VasteApp(fastapi.FastAPI):
         super().__init__()
         self.component = component
         self.component_routes = []
+        self.on_event("startup")(self._startup)
 
-        @self.on_event("startup")
-        def startup():
-            with open("index.html", "w") as f:
-                f.write(str(self.index))
+    def _startup(self):
+        with open("index.html", "w") as f:
+            f.write(str(self.index))
 
-            self.ast.save()
+        self.ast.save()
 
-            os.system("node node_modules/vite-ssg/bin/vite-ssg.js build")
+        os.system("node node_modules/vite-ssg/bin/vite-ssg.js build")
 
-            self.mount("/", StaticFiles(directory="dist", html=True))
+        self.mount("/", StaticFiles(directory="dist", html=True))
+
+    class PathView:
+        def __init__(self, path):
+            self.path = path
+
+        def __call__(self):
+            with open(f"dist/{append_html(self.path)}", "r") as file:
+                return fastapi.responses.HTMLResponse(file.read())
 
     def add_component_route(self, path, component):
         self.component_routes.append({
@@ -90,10 +98,7 @@ class VasteApp(fastapi.FastAPI):
 
         self.mount(f"/api", component.api)
 
-        @self.get(path)
-        def get_path():
-            with open(f"dist/{append_html(path)}", "r") as file:
-                return fastapi.responses.HTMLResponse(file.read())
+        self.get(path)(self.PathView(path))
 
     @property
     def index(self):
