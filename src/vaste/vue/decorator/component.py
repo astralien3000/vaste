@@ -27,7 +27,7 @@ def component(cls):
     methods_js_ast = MethodsTransformer().transform(methods_py_ast)
 
     all_source = inspect.getsource(cls)
-    all_py_ast = ast.parse(all_source)
+    all_py_ast = py.ast.parse(all_source)
     macro_set = FindMacroVisitor(frame).visit(all_py_ast)
 
     return VueComponentJsMacro(
