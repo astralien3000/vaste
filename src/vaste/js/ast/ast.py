@@ -158,3 +158,8 @@ class ImportDeclaration(AST):
 @_dataclass
 class ImportNamespaceSpecifier(AST):
     local: AST
+
+
+@_dataclass
+class ThisExpression(AST):
+    pass

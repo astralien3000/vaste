@@ -68,10 +68,30 @@ class VasteComponentJsMacro(JsMacro):
 
 class SelfProxy:
     def __init__(self, data_dict: dict):
-        self.data_dict = data_dict
+        object.__setattr__(self, "data_dict", data_dict)
     
-    def __getattribute__(self, k: str):
-        return object.__getattribute__(self, "data_dict").get(k, None)
+    def __getattr__(self, k: str):
+        return self.data_dict.get(k, None)
+
+    def __setattr__(self, k: str, v):
+        self.data_dict[k] = v
+
+
+class MethodProxy:
+    def __init__(self, method):
+        self._method = method
+
+    def __call__(self, data):
+        self_proxy = SelfProxy(json.loads(data))
+        res = self._method(
+            self=self_proxy,
+        )
+        return fastapi.responses.JSONResponse(
+            {
+                "return": res,
+                "data": self_proxy.data_dict,
+            }
+        )
 
 
 def component(cls):
@@ -115,9 +135,7 @@ def component(cls):
         for attr in dir(cls.server_methods):
             if attr[0] != "_" and callable(getattr(cls.server_methods, attr)):
                 method = getattr(cls.server_methods, attr)
-                api.get(f"/{attr}")((lambda method: lambda self: {
-                    "return": method(SelfProxy(json.loads(self)))
-                })(method))
+                api.get(f"/{attr}")(MethodProxy(method))
 
     all_source = inspect.getsource(cls)
     all_py_ast = py.ast.parse(all_source)

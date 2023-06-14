@@ -70,36 +70,28 @@ class MyComponent:
         self.count = self.get_count()
         self.lool = "MIEW"
 
-    class methods:
-
-        def inc(self):
-            self.count = self.send_inc()
-
-        def dec(self):
-            self.count = self.send_dec()
-
-        def reset(self):
-            self.count = self.send_reset()
-
     class server_methods:
 
         def get_count(self):
             global COUNT
             return COUNT
 
-        def send_inc(self):
+        def inc(self):
             global COUNT
             COUNT += 10
+            self.count = COUNT
             return COUNT
 
-        def send_dec(self):
+        def dec(self):
             global COUNT
             COUNT -= 2
+            self.count = COUNT
             return COUNT
 
-        def send_reset(self):
+        def reset(self):
             global COUNT
             COUNT = 0
+            self.count = COUNT
             return COUNT
 
         def test(self):

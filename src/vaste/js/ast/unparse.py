@@ -171,3 +171,7 @@ def _unparse_ImportNamespaceSpecifier(ast_obj: _ast.ImportNamespaceSpecifier):
         return f"""* as {
             unparse(ast_obj.local)
         }"""
+
+
+def _unparse_ThisExpression(ast_obj: _ast.ThisExpression):
+        return "this"

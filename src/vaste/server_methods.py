@@ -18,6 +18,25 @@ class ServerMethodsTransformer(DefaultTransformer):
                     ]),
                 )
             case py.ast.FunctionDef(name, py.ast.arguments([], [py.ast.arg("self"), *args]), body, []):
+                program = js.ast.parse(
+                    f"""
+                        () => {{
+                            var xmlHttp = new XMLHttpRequest();
+                            xmlHttp.open(
+                                "GET",
+                                "api/{name}?data=" + JSON.stringify(this.$data),
+                                false,
+                            );
+                            xmlHttp.send(null);
+                            const res_obj = JSON.parse(xmlHttp.response);
+                            Object.keys(res_obj.data).forEach((k)=>{{
+                                this.$data[k] = res_obj.data[k];
+                            }});
+                            return res_obj.return;
+                        }}
+                    """
+                )
+                body = program.body[0].expression.body
                 return js.ast.Property(
                     key=js.ast.Identifier(name),
                     value=js.ast.FunctionExpression(
@@ -25,77 +44,7 @@ class ServerMethodsTransformer(DefaultTransformer):
                             self.transform(arg)
                             for arg in args
                         ],
-                        body=js.ast.BlockStatement([
-                            js.ast.VariableDeclaration(
-                                kind="var",
-                                declarations=[
-                                    js.ast.VariableDeclarator(
-                                        id=js.ast.Identifier("xmlHttp"),
-                                        init=js.ast.NewExpression(
-                                            callee=js.ast.Identifier("XMLHttpRequest"),
-                                            arguments=[],
-                                        )
-                                    )
-                                ],
-                            ),
-                            js.ast.ExpressionStatement(
-                                js.ast.CallExpression(
-                                    callee=js.ast.MemberExpression(
-                                        object=js.ast.Identifier("xmlHttp"),
-                                        property=js.ast.Identifier("open"),
-                                    ),
-                                    arguments=[
-                                        js.ast.Literal("GET"),
-                                        js.ast.BinaryExpression(
-                                            left=js.ast.Literal(f"api/{name}?self="),
-                                            operator="+",
-                                            right=js.ast.CallExpression(
-                                                callee=js.ast.MemberExpression(
-                                                    object=js.ast.Identifier("JSON"),
-                                                    property=js.ast.Identifier("stringify"),
-                                                ),
-                                                arguments=[
-                                                    js.ast.MemberExpression(
-                                                        object=js.ast.Identifier("this"),
-                                                        property=js.ast.Identifier("$data"),
-                                                    ),
-                                                ],
-                                            )
-                                        ),
-                                        js.ast.Literal(False),
-                                    ],
-                                )
-                            ),
-                            js.ast.ExpressionStatement(
-                                js.ast.CallExpression(
-                                    callee=js.ast.MemberExpression(
-                                        object=js.ast.Identifier("xmlHttp"),
-                                        property=js.ast.Identifier("send"),
-                                    ),
-                                    arguments=[
-                                        js.ast.Literal(None),
-                                    ],
-                                )
-                            ),
-                            js.ast.ReturnStatement(
-                                js.ast.MemberExpression(
-                                    object=js.ast.CallExpression(
-                                        callee=js.ast.MemberExpression(
-                                            object=js.ast.Identifier("JSON"),
-                                            property=js.ast.Identifier("parse"),
-                                        ),
-                                        arguments=[
-                                            js.ast.MemberExpression(
-                                                object=js.ast.Identifier("xmlHttp"),
-                                                property=js.ast.Identifier("response"),
-                                            ),
-                                        ],
-                                    ),
-                                    property=js.ast.Literal("return"),
-                                    computed=True,
-                                )
-                            ),
-                        ])
+                        body=body,
                     ),
                     method=True,
                 )
