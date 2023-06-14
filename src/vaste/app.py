@@ -57,11 +57,11 @@ class ComponentRoutesJsMacro(JsMacro):
 
     @property
     def import_list(self):
-        return [
-            stmt
+        return {
+            repr(stmt): stmt
             for component_route in self.component_routes
             for stmt in component_route["component"].import_list
-        ]
+        }.values() # to avoid duplicated imports
 
 
 class VasteApp(fastapi.FastAPI):

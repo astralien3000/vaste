@@ -151,4 +151,5 @@ app = VasteApp()
 
 app.add_component_route("/miew", MyComponent)
 
-app.add_component_route("/", MyNav)
+app.add_component_route("/", MyComponent)
+
