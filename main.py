@@ -7,8 +7,11 @@ from vaste.vue.lib.html import *
 from vaste.vue.lib.svg import *
 
 from vaste.npm.lib import node_module
+from vaste.js.lib.bom import location, WebSocket
 
 import os
+
+import fastapi
 
 
 element = node_module.get(
@@ -21,6 +24,7 @@ element = node_module.get(
 vue = node_module.get("vue")
 vuerouter = node_module.get("vue-router")
 
+new_WebSocket = WebSocket.new
 
 @component
 class MyNav:
@@ -70,6 +74,14 @@ class MyComponent:
         self.count = self.get_count()
         self.lool = "MIEW"
 
+    class methods:
+
+        def connect(self):
+            self.ws = new_WebSocket("ws://"+location.host+"/ws")
+
+        def send(self):
+            self.ws.send("SEND")
+
     class server_methods:
 
         def get_count(self):
@@ -118,6 +130,16 @@ class MyComponent:
                         {"onClick": self.reset},
                         ["RESET"],
                     ),
+                    vue.h(
+                        element.ElButton,
+                        {"onClick": self.connect},
+                        ["CONNECT"],
+                    ),
+                    vue.h(
+                        element.ElButton,
+                        {"onClick": self.send},
+                        ["SEND"],
+                    ),
                     svg(
                         children=[
                             rect(
@@ -163,6 +185,14 @@ class MyComponent2:
 
 app = VasteApp()
 
-app.add_component_route("/miew", MyComponent2)
+app.add_component_route("/miew", MyComponent)
 
 app.add_component_route("/", MyComponent)
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: fastapi.WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        print(data)

@@ -1,7 +1,7 @@
-from ...js.transformer.default import *
+from ...js.transformer.macro import *
 
 
-class MethodsTransformer(DefaultTransformer):
+class MethodsTransformer(MacroExpansionTransformer):
 
     def transform(self, py_ast):
         match py_ast:
@@ -56,4 +56,4 @@ class MethodsTransformer(DefaultTransformer):
                 return js.ast.Identifier(
                     name="this",
                 )
-        return DefaultTransformer.transform(self, py_ast)
+        return super().transform(py_ast)

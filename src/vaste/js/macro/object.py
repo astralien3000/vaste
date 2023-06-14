@@ -2,6 +2,8 @@ from .macro import *
 from vaste import js
 from vaste import py
 
+from vaste.js.transformer.default import DefaultTransformer
+
 
 class AttributeJsMacro(JsMacro):
 
@@ -26,6 +28,35 @@ class AttributeJsMacro(JsMacro):
         return self.object_macro.import_list
 
 
+class NewObjectJsMacro(JsMacro):
+
+    def __init__(self, object_macro):
+        self.object_macro = object_macro
+
+    def match(self, path, py_ast):
+        match py_ast:
+            case py.ast.Call(func, args):
+                return py.ast.dump(func) == py.ast.dump(path2ast(path))
+        return False
+
+    class Transformer(JsMacro.Transformer):
+
+        def transform(self, py_ast):
+            sub_transformer = self.macro.object_macro.transformer(self.parent, self.path)
+            ret = js.ast.NewExpression(
+                callee=js.ast.Identifier(self.macro.object_macro.name),
+                arguments=[DefaultTransformer().transform(arg) for arg in py_ast.args]
+            )
+            return ret
+        
+    def save(self):
+        return self.object_macro.save()
+
+    @property
+    def import_list(self):
+        return self.object_macro.import_list
+
+
 class ObjectJsMacro(JsMacro):
 
     def __init__(self, name):
@@ -36,6 +67,10 @@ class ObjectJsMacro(JsMacro):
             return object.__getattribute__(self, k)
         except AttributeError:
             return AttributeJsMacro(self, k)
+    
+    @property
+    def new(self):
+        return NewObjectJsMacro(self)
 
     def match(self, path, py_ast):
         return py.ast.dump(py_ast) == py.ast.dump(path2ast(path))

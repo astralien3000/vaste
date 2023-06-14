@@ -100,7 +100,7 @@ def component(cls):
     if hasattr(cls, "data"):
         data_source = "if True:\n" + inspect.getsource(cls.data)
         data_py_ast = py.ast.parse(data_source)
-        data_js_ast = DataTransformer().transform(data_py_ast)
+        data_js_ast = DataTransformer(frame).transform(data_py_ast)
     else:
         data_js_ast = js.ast.Property(
             key=js.ast.Identifier("data"),
@@ -121,7 +121,7 @@ def component(cls):
     if hasattr(cls, "methods"):
         methods_source = "class module:\n" + inspect.getsource(cls.methods)
         methods_py_ast = py.ast.parse(methods_source)
-        methods_js_ast = MethodsTransformer().transform(methods_py_ast)
+        methods_js_ast = MethodsTransformer(frame).transform(methods_py_ast)
     else:
         methods_js_ast = js.ast.Property(
             key=js.ast.Identifier("methods"),

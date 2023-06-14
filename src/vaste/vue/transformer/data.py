@@ -1,7 +1,7 @@
-from vaste.js.transformer.default import *
+from vaste.js.transformer.macro import *
 
 
-class DataTransformer(DefaultTransformer):
+class DataTransformer(MacroExpansionTransformer):
 
     def transform(self, py_ast):
         match py_ast:
