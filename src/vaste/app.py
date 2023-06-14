@@ -87,7 +87,7 @@ class VasteApp(fastapi.FastAPI):
             self.path = path
 
         def __call__(self):
-            with open(f"dist/{append_html(self.path)}", "r") as file:
+            with open(f"dist/index.html", "r") as file:
                 return fastapi.responses.HTMLResponse(file.read())
 
     def add_component_route(self, path, component):
@@ -96,8 +96,7 @@ class VasteApp(fastapi.FastAPI):
             "component": component,
         })
 
-        self.mount(f"/api", component.api)
-
+        self.mount(f"/api/{component.name}", component.api)
         self.get(path)(self.PathView(path))
 
     @property

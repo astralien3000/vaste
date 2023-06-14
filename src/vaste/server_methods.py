@@ -3,6 +3,9 @@ from .js.transformer.default import *
 
 class ServerMethodsTransformer(DefaultTransformer):
 
+    def __init__(self, component_name):
+        self.component_name = component_name
+
     def transform(self, py_ast):
         match py_ast:
             case py.ast.Module([module_cls]):
@@ -24,7 +27,7 @@ class ServerMethodsTransformer(DefaultTransformer):
                             var xmlHttp = new XMLHttpRequest();
                             xmlHttp.open(
                                 "GET",
-                                "api/{name}?data=" + JSON.stringify(this.$data),
+                                "api/{self.component_name}/{name}?data=" + JSON.stringify(this.$data),
                                 false,
                             );
                             xmlHttp.send(null);

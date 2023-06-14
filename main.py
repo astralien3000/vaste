@@ -144,12 +144,25 @@ class MyComponent:
         ])
 
 
+@component
+class MyComponent2:
+
+    def render(self):
+        return div([
+            vue.h(
+                MyNav,
+                {},
+                [],
+            ),
+            div(["Other component"]),
+        ])
+
+
 # print(MyComponent)
 # print(MyComponent.unparse())
 
 app = VasteApp()
 
-app.add_component_route("/miew", MyComponent)
+app.add_component_route("/miew", MyComponent2)
 
 app.add_component_route("/", MyComponent)
-

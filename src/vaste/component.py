@@ -97,9 +97,22 @@ class MethodProxy:
 def component(cls):
     frame = inspect.currentframe().f_back
 
-    data_source = "if True:\n" + inspect.getsource(cls.data)
-    data_py_ast = py.ast.parse(data_source)
-    data_js_ast = DataTransformer().transform(data_py_ast)
+    if hasattr(cls, "data"):
+        data_source = "if True:\n" + inspect.getsource(cls.data)
+        data_py_ast = py.ast.parse(data_source)
+        data_js_ast = DataTransformer().transform(data_py_ast)
+    else:
+        data_js_ast = js.ast.Property(
+            key=js.ast.Identifier("data"),
+            value=js.ast.FunctionExpression(
+                js.ast.BlockStatement([
+                    js.ast.ReturnStatement(
+                        js.ast.ObjectExpression([]),
+                    ),
+                ]),
+            ),
+            method=True,
+        )
 
     render_source = "if True:\n" + inspect.getsource(cls.render)
     render_py_ast = py.ast.parse(render_source)
@@ -121,7 +134,7 @@ def component(cls):
     if hasattr(cls, "server_methods"):
         server_methods_source = "class module:\n" + inspect.getsource(cls.server_methods)
         server_methods_py_ast = py.ast.parse(server_methods_source)
-        server_methods_js_ast = ServerMethodsTransformer().transform(server_methods_py_ast)
+        server_methods_js_ast = ServerMethodsTransformer(component_name=cls.__name__).transform(server_methods_py_ast)
 
         methods_js_ast = js.ast.Property(
             key=js.ast.Identifier("methods"),
