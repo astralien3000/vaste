@@ -104,6 +104,13 @@ class BinaryExpression(AST):
 
 
 @_dataclass
+class UnaryExpression(AST):
+    operator: str
+    argument: AST
+    prefix: bool = True
+
+
+@_dataclass
 class AssignmentExpression(AST):
     left: AST
     operator: str
@@ -163,3 +170,10 @@ class ImportNamespaceSpecifier(AST):
 @_dataclass
 class ThisExpression(AST):
     pass
+
+
+@_dataclass
+class IfStatement(AST):
+    test: AST
+    consequent: AST
+    alternate: AST = None

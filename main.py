@@ -76,11 +76,13 @@ class MyComponent:
 
     class methods:
 
-        def connect(self):
-            self.ws = new_WebSocket("ws://"+location.host+"/ws")
-
         def send(self):
-            self.ws.send("SEND")
+            if not self.ws:
+                ws = new_WebSocket("ws://"+location.host+"/ws")
+                ws.addEventListener("open", lambda _: ws.send("CONNECT"))
+                self.ws = ws
+            else:
+                self.ws.send("SEND")
 
     class server_methods:
 
@@ -129,11 +131,6 @@ class MyComponent:
                         element.ElButton,
                         {"onClick": self.reset},
                         ["RESET"],
-                    ),
-                    vue.h(
-                        element.ElButton,
-                        {"onClick": self.connect},
-                        ["CONNECT"],
                     ),
                     vue.h(
                         element.ElButton,

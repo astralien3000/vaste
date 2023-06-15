@@ -40,6 +40,13 @@ class MethodsTransformer(MacroExpansionTransformer):
                         right=self.transform(value),
                     ),
                 )
+            case py.ast.Assign([py.ast.Name(name)], value):
+                return js.ast.VariableDeclaration([
+                    js.ast.VariableDeclarator(
+                        id=js.ast.Identifier(name),
+                        init=self.transform(value),
+                    ),
+                ])
             case py.ast.Assign([target], value):
                 return js.ast.ExpressionStatement(
                     js.ast.AssignmentExpression(

@@ -41,4 +41,4 @@ class DataTransformer(MacroExpansionTransformer):
                 return js.ast.Identifier(
                     name="this",
                 )
-        return DefaultTransformer.transform(self, py_ast)
+        return super().transform(py_ast)

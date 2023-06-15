@@ -54,6 +54,14 @@ class DefaultTransformer:
                         for stmt in body
                     ])
                 )
+            case py.ast.Lambda(py.ast.arguments([], [*args]), body):
+                return js.ast.ArrowFunctionExpression(
+                    params=[
+                        self.transform(arg)
+                        for arg in args
+                    ],
+                    body=self.transform(body),
+                )
             case py.ast.arg(name):
                 return js.ast.Identifier(name)
             case py.ast.Return(value):
@@ -104,4 +112,23 @@ class DefaultTransformer:
                     )
                     for key, value in zip(keys, values)
                 ])
+            case py.ast.If(test, body, orelse):
+                return js.ast.IfStatement(
+                    test=self.transform(test),
+                    consequent=js.ast.BlockStatement([
+                        self.transform(stmt)
+                        for stmt in body
+                    ]),
+                    alternate=js.ast.BlockStatement([
+                        self.transform(stmt)
+                        for stmt in orelse
+                    ]),
+                )
+            case py.ast.UnaryOp(op, operand):
+                return js.ast.UnaryExpression(
+                    operator=self.transform(op),
+                    argument=self.transform(operand),
+                )
+            case py.ast.Not():
+                return "!"
         raise Exception(f"Unmatched ast : {py.ast.dump(py_ast)}")
