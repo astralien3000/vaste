@@ -2,24 +2,22 @@ from .macro import *
 from vaste import js
 from vaste import py
 
-from vaste.js.transformer.default import DefaultTransformer
+from vaste.js.transpiler.default import DefaultTranspiler
 
 
 class AttributeJsMacro(JsMacro):
-
     def __init__(self, object_macro, key):
         self.object_macro = object_macro
         self.key = key
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, py_ast):
-            sub_transformer = self.macro.object_macro.transformer(self.parent, self.path)
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, py_ast):
+            sub_transpiler = self.macro.object_macro.transpiler(self.parent, self.path)
             return js.ast.MemberExpression(
-                object=sub_transformer.transform(py_ast),
+                object=sub_transpiler.transpile(py_ast),
                 property=js.ast.Identifier(self.macro.key),
             )
-        
+
     def save(self):
         return self.object_macro.save()
 
@@ -29,7 +27,6 @@ class AttributeJsMacro(JsMacro):
 
 
 class NewObjectJsMacro(JsMacro):
-
     def __init__(self, object_macro):
         self.object_macro = object_macro
 
@@ -39,16 +36,15 @@ class NewObjectJsMacro(JsMacro):
                 return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, py_ast):
-            sub_transformer = self.macro.object_macro.transformer(self.parent, self.path)
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, py_ast):
+            sub_transpiler = self.macro.object_macro.transpiler(self.parent, self.path)
             ret = js.ast.NewExpression(
                 callee=js.ast.Identifier(self.macro.object_macro.name),
-                arguments=[DefaultTransformer().transform(arg) for arg in py_ast.args]
+                arguments=[DefaultTranspiler().transpile(arg) for arg in py_ast.args],
             )
             return ret
-        
+
     def save(self):
         return self.object_macro.save()
 
@@ -58,7 +54,6 @@ class NewObjectJsMacro(JsMacro):
 
 
 class ObjectJsMacro(JsMacro):
-
     def __init__(self, name):
         self.name = name
 
@@ -67,7 +62,7 @@ class ObjectJsMacro(JsMacro):
             return object.__getattribute__(self, k)
         except AttributeError:
             return AttributeJsMacro(self, k)
-    
+
     @property
     def new(self):
         return NewObjectJsMacro(self)
@@ -75,9 +70,8 @@ class ObjectJsMacro(JsMacro):
     def match(self, path, py_ast):
         return py.ast.dump(py_ast) == py.ast.dump(path2ast(path))
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, _):
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, _):
             return js.ast.Identifier(self.macro.name)
 
     def __repr__(self):

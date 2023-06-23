@@ -2,36 +2,36 @@ from vaste import py
 from vaste import js
 
 
-class DefaultTransformer:
+class DefaultTranspiler:
 
-    def transform(self, py_ast):
+    def transpile(self, py_ast: py.ast.AST) -> js.ast.AST:
         match py_ast:
             case py.ast.Module(body):
                 return js.ast.Program([
-                    self.transform(stmt_ast)
+                    self.transpile(stmt_ast)
                     for stmt_ast in body
                 ])
             case py.ast.Expr(value):
                 return js.ast.ExpressionStatement(
-                    self.transform(value)
+                    self.transpile(value)
                 )
             case py.ast.Call(func, args, []):
                 return js.ast.CallExpression(
-                    callee=self.transform(func),
+                    callee=self.transpile(func),
                     arguments=[
-                        self.transform(expr_ast)
+                        self.transpile(expr_ast)
                         for expr_ast in args
                     ],
                 )
             case py.ast.Attribute(value, attr):
                 return js.ast.MemberExpression(
-                    object=self.transform(value),
+                    object=self.transpile(value),
                     property=js.ast.Identifier(attr),
                 )
             case py.ast.Subscript(value, attr):
                 return js.ast.MemberExpression(
-                    object=self.transform(value),
-                    property=self.transform(attr),
+                    object=self.transpile(value),
+                    property=self.transpile(attr),
                     computed=True,
                 )
             case py.ast.Name(id):
@@ -46,88 +46,88 @@ class DefaultTransformer:
                 return js.ast.FunctionDeclaration(
                     id=js.ast.Identifier(name),
                     params=[
-                        self.transform(arg)
+                        self.transpile(arg)
                         for arg in args
                     ],
                     body=js.ast.BlockStatement([
-                        self.transform(stmt)
+                        self.transpile(stmt)
                         for stmt in body
                     ])
                 )
             case py.ast.Lambda(py.ast.arguments([], [*args]), body):
                 return js.ast.ArrowFunctionExpression(
                     params=[
-                        self.transform(arg)
+                        self.transpile(arg)
                         for arg in args
                     ],
-                    body=self.transform(body),
+                    body=self.transpile(body),
                 )
             case py.ast.arg(name):
                 return js.ast.Identifier(name)
             case py.ast.Return(value):
                 return js.ast.ReturnStatement(
-                    self.transform(value)
+                    self.transpile(value)
                 )
             case py.ast.BinOp(left, op, right):
                 return js.ast.BinaryExpression(
-                    left=self.transform(left),
-                    operator=self.transform(op),
-                    right=self.transform(right),
+                    left=self.transpile(left),
+                    operator=self.transpile(op),
+                    right=self.transpile(right),
                 )
             case py.ast.Add():
                 return "+"
             case py.ast.Assign([target], value):
                 return js.ast.ExpressionStatement(
                     js.ast.AssignmentExpression(
-                        left=self.transform(target),
+                        left=self.transpile(target),
                         operator="=",
-                        right=self.transform(value),
+                        right=self.transpile(value),
                     ),
                 )
             case py.ast.List(elts):
                 return js.ast.ArrayExpression([
-                    self.transform(elt)
+                    self.transpile(elt)
                     for elt in elts
                 ])
             case py.ast.ListComp(elt, generators):
                 return js.ast.CallExpression(
                     callee=js.ast.MemberExpression(
-                        object=self.transform(generators[-1].iter),
+                        object=self.transpile(generators[-1].iter),
                         property=js.ast.Identifier("map"),
                     ),
                     arguments=[
                         js.ast.ArrowFunctionExpression(
                             params=[
-                                self.transform(generators[-1].target)
+                                self.transpile(generators[-1].target)
                             ],
-                            body=self.transform(elt),
+                            body=self.transpile(elt),
                         )
                     ],
                 )
             case py.ast.Dict(keys, values):
                 return js.ast.ObjectExpression([
                     js.ast.Property(
-                        key=self.transform(key),
-                        value=self.transform(value),
+                        key=self.transpile(key),
+                        value=self.transpile(value),
                     )
                     for key, value in zip(keys, values)
                 ])
             case py.ast.If(test, body, orelse):
                 return js.ast.IfStatement(
-                    test=self.transform(test),
+                    test=self.transpile(test),
                     consequent=js.ast.BlockStatement([
-                        self.transform(stmt)
+                        self.transpile(stmt)
                         for stmt in body
                     ]),
                     alternate=js.ast.BlockStatement([
-                        self.transform(stmt)
+                        self.transpile(stmt)
                         for stmt in orelse
                     ]),
                 )
             case py.ast.UnaryOp(op, operand):
                 return js.ast.UnaryExpression(
-                    operator=self.transform(op),
-                    argument=self.transform(operand),
+                    operator=self.transpile(op),
+                    argument=self.transpile(operand),
                 )
             case py.ast.Not():
                 return "!"

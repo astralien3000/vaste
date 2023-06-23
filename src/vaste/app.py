@@ -27,29 +27,36 @@ def append_html(path):
 
 
 class ComponentRoutesJsMacro(JsMacro):
-
     def __init__(self, component_routes):
         self.component_routes = component_routes
-    
-    class Transformer(JsMacro.Transformer):
-        def transform(self, py_ast):
-            return js.ast.ArrayExpression([
-                js.ast.ObjectExpression([
-                    js.ast.Property(
-                        key=js.ast.Identifier("path"),
-                        value=js.ast.Literal(component_route["path"]),
-                    ),
-                    js.ast.Property(
-                        key=js.ast.Identifier("alias"),
-                        value=js.ast.Literal(append_html(component_route["path"])),
-                    ),
-                    js.ast.Property(
-                        key=js.ast.Identifier("component"),
-                        value=js.ast.Identifier(component_route["component"].name),
-                    ),
-                ])
-                for component_route in self.macro.component_routes
-            ])
+
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, py_ast):
+            return js.ast.ArrayExpression(
+                [
+                    js.ast.ObjectExpression(
+                        [
+                            js.ast.Property(
+                                key=js.ast.Identifier("path"),
+                                value=js.ast.Literal(component_route["path"]),
+                            ),
+                            js.ast.Property(
+                                key=js.ast.Identifier("alias"),
+                                value=js.ast.Literal(
+                                    append_html(component_route["path"])
+                                ),
+                            ),
+                            js.ast.Property(
+                                key=js.ast.Identifier("component"),
+                                value=js.ast.Identifier(
+                                    component_route["component"].name
+                                ),
+                            ),
+                        ]
+                    )
+                    for component_route in self.macro.component_routes
+                ]
+            )
 
     def save(self):
         for component_route in self.component_routes:
@@ -61,12 +68,11 @@ class ComponentRoutesJsMacro(JsMacro):
             repr(stmt): stmt
             for component_route in self.component_routes
             for stmt in component_route["component"].import_list
-        }.values() # to avoid duplicated imports
+        }.values()  # to avoid duplicated imports
 
 
 class VasteApp(fastapi.FastAPI):
-
-    def __init__(self, component = vuerouter.RouterView):
+    def __init__(self, component=vuerouter.RouterView):
         super().__init__()
         self.component = component
         self.component_routes = []
@@ -91,27 +97,35 @@ class VasteApp(fastapi.FastAPI):
                 return fastapi.responses.HTMLResponse(file.read())
 
     def add_component_route(self, path, component):
-        self.component_routes.append({
-            "path": path,
-            "component": component,
-        })
+        self.component_routes.append(
+            {
+                "path": path,
+                "component": component,
+            }
+        )
 
         self.mount(f"/api/{component.name}", component.api)
         self.get(path)(self.PathView(path))
 
     @property
     def index(self):
-        return  html.html([
-            html.head([
-                html.script(
-                    src=self.ast.filename,
-                    type="module",
+        return html.html(
+            [
+                html.head(
+                    [
+                        html.script(
+                            src=self.ast.filename,
+                            type="module",
+                        ),
+                    ]
                 ),
-            ]),
-            html.body([
-                html.div(id="app"),
-            ])
-        ])
+                html.body(
+                    [
+                        html.div(id="app"),
+                    ]
+                ),
+            ]
+        )
 
     @property
     def ast(self):

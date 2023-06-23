@@ -1,10 +1,9 @@
 from vaste import py
 from vaste.js.macro.macro import JsMacro
-from vaste.js.transformer.macro import macro_map_frame
+from vaste.js.transpiler.macro import macro_map_frame
 
 
 class FindMacroVisitor(py.ast.NodeVisitor):
-
     def __init__(self, frame):
         self.macro_map = macro_map_frame(frame)
         self.cache = set()

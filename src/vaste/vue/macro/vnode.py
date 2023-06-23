@@ -13,9 +13,8 @@ class VNodeJsMacro(JsMacro):
                 return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, py_ast):
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, py_ast):
             match py_ast:
                 case py.ast.Call(
                     _,
@@ -29,13 +28,15 @@ class VNodeJsMacro(JsMacro):
                         ),
                         arguments=[
                             js.ast.Literal(self.macro.name),
-                            js.ast.ObjectExpression([
-                                self.transform(kwarg)
-                                for kwarg in kwargs
-                                if kwarg.arg != "children"
-                            ]),
+                            js.ast.ObjectExpression(
+                                [
+                                    self.transpile(kwarg)
+                                    for kwarg in kwargs
+                                    if kwarg.arg != "children"
+                                ]
+                            ),
                             *[
-                                self.parent.transform(kwarg.value)
+                                self.parent.transpile(kwarg.value)
                                 for kwarg in kwargs
                                 if kwarg.arg == "children"
                             ],
@@ -53,20 +54,23 @@ class VNodeJsMacro(JsMacro):
                         ),
                         arguments=[
                             js.ast.Literal(self.macro.name),
-                            js.ast.ObjectExpression([
-                                self.transform(kwarg)
-                                for kwarg in kwargs
-                                if kwarg.arg != "children"
-                            ]),
-                            js.ast.ArrayExpression([
-                                self.parent.transform(elt)
-                                for elt in children_arg.elts
-                            ]),
+                            js.ast.ObjectExpression(
+                                [
+                                    self.transpile(kwarg)
+                                    for kwarg in kwargs
+                                    if kwarg.arg != "children"
+                                ]
+                            ),
+                            js.ast.ArrayExpression(
+                                [
+                                    self.parent.transpile(elt)
+                                    for elt in children_arg.elts
+                                ]
+                            ),
                         ],
                     )
                 case py.ast.keyword(arg, value):
                     return js.ast.Property(
-                        key=js.ast.Identifier(arg),
-                        value=self.parent.transform(value)
+                        key=js.ast.Identifier(arg), value=self.parent.transpile(value)
                     )
             raise Exception(f"[VNodeJsMacro] Unmatched ast : {py.ast.dump(py_ast)}")

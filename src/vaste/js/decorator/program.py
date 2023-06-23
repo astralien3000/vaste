@@ -1,7 +1,7 @@
 import inspect
 
 from vaste.js.visitor.find_macro import FindMacroVisitor
-from vaste.js.transformer.program import ProgramTransformer
+from vaste.js.transpiler.program import ProgramTranspiler
 from vaste import py
 
 from vaste.js.macro.program import ProgramJsMacro
@@ -9,7 +9,7 @@ from vaste.js.macro.program import ProgramJsMacro
 
 def program(cls):
     frame = inspect.currentframe().f_back
-    tansformer = ProgramTransformer(frame)
+    tansformer = ProgramTranspiler(frame)
     visitor = FindMacroVisitor(frame)
 
     cls_source = inspect.getsource(cls)
@@ -20,13 +20,13 @@ def program(cls):
 
     match cls_py_ast:
         case py.ast.Module([py.ast.ClassDef(name, [], [], body)]):
-            cls_js_ast = tansformer.transform(py.ast.Module(body))
+            cls_js_ast = tansformer.transpile(py.ast.Module(body))
             dep_list = visitor.visit(py.ast.Module(body))
             return ProgramJsMacro(name, cls_js_ast, dep_list)
-        case py.ast.Module([py.ast.If(py.ast.Constant(True), [py.ast.ClassDef(name, [], [], body)])]):
-            cls_js_ast = tansformer.transform(py.ast.Module(body))
+        case py.ast.Module(
+            [py.ast.If(py.ast.Constant(True), [py.ast.ClassDef(name, [], [], body)])]
+        ):
+            cls_js_ast = tansformer.transpile(py.ast.Module(body))
             dep_list = visitor.visit(py.ast.Module(body))
             return ProgramJsMacro(name, cls_js_ast, dep_list)
-    raise Exception(
-        f"Unable to generate ProgramJsMacro from {py.ast.dump(cls_py_ast)}"
-    )
+    raise Exception(f"Unable to generate ProgramJsMacro from {py.ast.dump(cls_py_ast)}")

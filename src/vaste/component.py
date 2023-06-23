@@ -5,17 +5,17 @@ import json
 
 from vaste import js
 from vaste import py
-from vaste.vue.transformer.methods import MethodsTransformer
-from vaste.vue.transformer.data import DataTransformer
-from vaste.vue.transformer.render import RenderTransformer
-from vaste.server_methods import ServerMethodsTransformer
+from vaste.vue.transpiler.methods import MethodsTranspiler
+from vaste.vue.transpiler.data import DataTranspiler
+from vaste.vue.transpiler.render import RenderTranspiler
+from vaste.server_methods import ServerMethodsTranspiler
 
 from vaste.js.visitor.find_macro import FindMacroVisitor
 from vaste.js.macro.macro import *
 
-class VasteComponentJsMacro(JsMacro):
 
-    def __init__(self, name, ast, api, macro_set = []):
+class VasteComponentJsMacro(JsMacro):
+    def __init__(self, name, ast, api, macro_set=[]):
         self.name = name
         self.ast = ast
         self.api = api
@@ -23,20 +23,18 @@ class VasteComponentJsMacro(JsMacro):
 
     def unparse(self):
         return js.ast.unparse(
-            js.ast.Program([
-                *[
-                    stmt
-                    for macro in self.macro_set
-                    for stmt in macro.import_list
-                ],
-                js.ast.ExportDefaultDeclaration(self.ast),
-            ])
+            js.ast.Program(
+                [
+                    *[stmt for macro in self.macro_set for stmt in macro.import_list],
+                    js.ast.ExportDefaultDeclaration(self.ast),
+                ]
+            )
         )
 
     @property
     def filename(self):
         return f"./{self.name}.mjs"
-    
+
     def save(self):
         for macro in self.macro_set:
             macro.save()
@@ -49,9 +47,8 @@ class VasteComponentJsMacro(JsMacro):
     def match(self, path, py_ast):
         return py.ast.dump(py_ast) == py.ast.dump(path2ast(path))
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, _):
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, _):
             return js.ast.Identifier(self.macro.name)
 
     @property
@@ -69,7 +66,7 @@ class VasteComponentJsMacro(JsMacro):
 class SelfProxy:
     def __init__(self, data_dict: dict):
         object.__setattr__(self, "data_dict", data_dict)
-    
+
     def __getattr__(self, k: str):
         return self.data_dict.get(k, None)
 
@@ -100,28 +97,30 @@ def component(cls):
     if hasattr(cls, "data"):
         data_source = "if True:\n" + inspect.getsource(cls.data)
         data_py_ast = py.ast.parse(data_source)
-        data_js_ast = DataTransformer(frame).transform(data_py_ast)
+        data_js_ast = DataTranspiler(frame).transpile(data_py_ast)
     else:
         data_js_ast = js.ast.Property(
             key=js.ast.Identifier("data"),
             value=js.ast.FunctionExpression(
-                js.ast.BlockStatement([
-                    js.ast.ReturnStatement(
-                        js.ast.ObjectExpression([]),
-                    ),
-                ]),
+                js.ast.BlockStatement(
+                    [
+                        js.ast.ReturnStatement(
+                            js.ast.ObjectExpression([]),
+                        ),
+                    ]
+                ),
             ),
             method=True,
         )
 
     render_source = "if True:\n" + inspect.getsource(cls.render)
     render_py_ast = py.ast.parse(render_source)
-    render_js_ast = RenderTransformer(frame).transform(render_py_ast)
+    render_js_ast = RenderTranspiler(frame).transpile(render_py_ast)
 
     if hasattr(cls, "methods"):
         methods_source = "class module:\n" + inspect.getsource(cls.methods)
         methods_py_ast = py.ast.parse(methods_source)
-        methods_js_ast = MethodsTransformer(frame).transform(methods_py_ast)
+        methods_js_ast = MethodsTranspiler(frame).transpile(methods_py_ast)
     else:
         methods_js_ast = js.ast.Property(
             key=js.ast.Identifier("methods"),
@@ -132,17 +131,23 @@ def component(cls):
     api = fastapi.FastAPI()
 
     if hasattr(cls, "server_methods"):
-        server_methods_source = "class module:\n" + inspect.getsource(cls.server_methods)
+        server_methods_source = "class module:\n" + inspect.getsource(
+            cls.server_methods
+        )
         server_methods_py_ast = py.ast.parse(server_methods_source)
-        server_methods_js_ast = ServerMethodsTransformer(component_name=cls.__name__).transform(server_methods_py_ast)
+        server_methods_js_ast = ServerMethodsTranspiler(
+            component_name=cls.__name__
+        ).transpile(server_methods_py_ast)
 
         methods_js_ast = js.ast.Property(
             key=js.ast.Identifier("methods"),
             method=False,
-            value=js.ast.ObjectExpression([
-                *methods_js_ast.value.properties,
-                *server_methods_js_ast.value.properties,
-            ]),
+            value=js.ast.ObjectExpression(
+                [
+                    *methods_js_ast.value.properties,
+                    *server_methods_js_ast.value.properties,
+                ]
+            ),
         )
 
         for attr in dir(cls.server_methods):
@@ -156,11 +161,13 @@ def component(cls):
 
     return VasteComponentJsMacro(
         name=cls.__name__,
-        ast=js.ast.ObjectExpression([
-            data_js_ast,
-            methods_js_ast,
-            render_js_ast,
-        ]),
+        ast=js.ast.ObjectExpression(
+            [
+                data_js_ast,
+                methods_js_ast,
+                render_js_ast,
+            ]
+        ),
         api=api,
         macro_set=macro_set,
     )

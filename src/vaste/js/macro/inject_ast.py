@@ -10,7 +10,7 @@ class InjectAstJsMacro(JsMacro):
     def __call__(self, arg):
         self.data.append(arg)
         return self
-    
+
     def pop(self):
         return self.data.popleft()
 
@@ -20,9 +20,8 @@ class InjectAstJsMacro(JsMacro):
                 return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, _):
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, _):
             return self.macro.pop()
 
     def __repr__(self):

@@ -5,7 +5,7 @@ from vaste.js.macro.macro import JsMacro
 import inspect
 
 
-def macro_map_module(module, path = []):
+def macro_map_module(module, path=[]):
     return {
         **{
             (*path, k): getattr(module, k)
@@ -22,28 +22,28 @@ def macro_map_module(module, path = []):
         },
     }
 
+
 def macro_map_frame(frame):
     return {
-        **{
-            (k,): v
-            for k, v in frame.f_locals.items()
-            if issubclass(type(v), JsMacro)
-        },
+        **{(k,): v for k, v in frame.f_locals.items() if issubclass(type(v), JsMacro)},
         **macro_map_module(inspect.getmodule(frame)),
     }
 
 
-class MacroExpansionTransformer(DefaultTransformer):
-
+class MacroExpansionTranspiler(DefaultTranspiler):
     def __init__(self, frame):
         self.macro_map = macro_map_frame(frame)
 
-    def transform(self, py_ast):
+    def transpile(self, py_ast):
         for path, macro in self.macro_map.items():
             if type(macro).match(macro, path, py_ast):
-                return type(macro).transformer(
-                    self=macro,
-                    parent=self,
-                    path=path,
-                ).transform(py_ast)
-        return DefaultTransformer.transform(self, py_ast)
+                return (
+                    type(macro)
+                    .transpiler(
+                        self=macro,
+                        parent=self,
+                        path=path,
+                    )
+                    .transpile(py_ast)
+                )
+        return DefaultTranspiler.transpile(self, py_ast)

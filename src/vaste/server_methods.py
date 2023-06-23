@@ -1,26 +1,26 @@
-from .js.transformer.default import *
+from .js.transpiler.default import *
 
 
-class ServerMethodsTransformer(DefaultTransformer):
-
+class ServerMethodsTranspiler(DefaultTranspiler):
     def __init__(self, component_name):
         self.component_name = component_name
 
-    def transform(self, py_ast):
+    def transpile(self, py_ast):
         match py_ast:
             case py.ast.Module([module_cls]):
-                return self.transform(module_cls)
+                return self.transpile(module_cls)
             case py.ast.ClassDef("module", [], [], [methods_cls], []):
-                return self.transform(methods_cls)
+                return self.transpile(methods_cls)
             case py.ast.ClassDef("server_methods", [], [], body, []):
                 return js.ast.Property(
                     key=js.ast.Identifier("methods"),
-                    value=js.ast.ObjectExpression([
-                        self.transform(stmt)
-                        for stmt in body
-                    ]),
+                    value=js.ast.ObjectExpression(
+                        [self.transpile(stmt) for stmt in body]
+                    ),
                 )
-            case py.ast.FunctionDef(name, py.ast.arguments([], [py.ast.arg("self"), *args]), body, []):
+            case py.ast.FunctionDef(
+                name, py.ast.arguments([], [py.ast.arg("self"), *args]), body, []
+            ):
                 program = js.ast.parse(
                     f"""
                         () => {{
@@ -43,12 +43,9 @@ class ServerMethodsTransformer(DefaultTransformer):
                 return js.ast.Property(
                     key=js.ast.Identifier(name),
                     value=js.ast.FunctionExpression(
-                        params=[
-                            self.transform(arg)
-                            for arg in args
-                        ],
+                        params=[self.transpile(arg) for arg in args],
                         body=body,
                     ),
                     method=True,
                 )
-        return DefaultTransformer.transform(self, py_ast)
+        return DefaultTranspiler.transpile(self, py_ast)

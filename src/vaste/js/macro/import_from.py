@@ -3,16 +3,14 @@ from vaste import js
 
 
 class ImportFromJsMacro(JsMacro):
-
     def match(self, path, py_ast):
         match py_ast:
             case py.ast.Assign(_, py.ast.Call(func, _)):
                 return py.ast.dump(func) == py.ast.dump(path2ast(path))
         return False
 
-    class Transformer(JsMacro.Transformer):
-
-        def transform(self, py_ast):
+    class Transpiler(JsMacro.Transpiler):
+        def transpile(self, py_ast):
             match py_ast:
                 case py.ast.Assign(
                     [py.ast.Name(spec_name)],
@@ -29,7 +27,7 @@ class ImportFromJsMacro(JsMacro):
                         ],
                         source=js.ast.Literal(source),
                     )
-            raise Exception("ERROR in ImportJsMacro.transform")
+            raise Exception("ERROR in ImportJsMacro.transpile")
 
     def __repr__(self):
         return "ImportJsMacro()"
